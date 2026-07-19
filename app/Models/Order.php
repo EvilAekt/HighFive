@@ -19,6 +19,9 @@ class Order extends Model
         'shipping_cost',
         'coupon_code',
         'discount_amount',
+        'shipping_courier',
+        'shipping_service',
+        'resi_number',
     ];
 
     public function user()

@@ -33,7 +33,7 @@
                                             </p>
                                         </div>
                                         <p class="font-semibold text-primary-900">
-                                            {{ formatPrice($cart->variant->product->price * $cart->quantity) }}
+                                            {{ formatPrice($cart->variant->product->current_price * $cart->quantity) }}
                                         </p>
                                     </div>
                                     
@@ -66,8 +66,29 @@
                     <h2 class="text-lg font-bold uppercase tracking-widest mb-6 border-b border-primary-200 pb-4">Ringkasan Belanja</h2>
                     
                     @php
-                        $subtotal = $carts->sum(function($cart) { return $cart->variant->product->price * $cart->quantity; });
+                        $subtotal = $carts->sum(function($cart) { return $cart->variant->product->current_price * $cart->quantity; });
+                        $freeShippingThreshold = 500000;
+                        $progress = min(100, ($subtotal / $freeShippingThreshold) * 100);
+                        $remaining = max(0, $freeShippingThreshold - $subtotal);
                     @endphp
+
+                    <!-- Free Shipping Progress -->
+                    <div class="mb-6 bg-white p-4 border border-primary-100 shadow-sm">
+                        @if($remaining > 0)
+                            <p class="text-xs font-bold text-primary-900 uppercase tracking-widest mb-2 flex items-center justify-between">
+                                <span>Kurang <span class="text-red-600">{{ formatPrice($remaining) }}</span></span>
+                                <span>Gratis Ongkir!</span>
+                            </p>
+                        @else
+                            <p class="text-xs font-bold text-green-600 uppercase tracking-widest mb-2 flex items-center justify-between">
+                                <span>Selamat!</span>
+                                <span>Anda dapat Gratis Ongkir 🎉</span>
+                            </p>
+                        @endif
+                        <div class="w-full h-1.5 bg-gray-200 overflow-hidden relative">
+                            <div class="absolute top-0 left-0 h-full transition-all duration-1000 ease-out {{ $remaining > 0 ? 'bg-black dark:bg-white' : 'bg-green-500' }}" style="width: {{ $progress }}%"></div>
+                        </div>
+                    </div>
 
                     <div class="space-y-4 text-sm mb-6">
                         <div class="flex justify-between">

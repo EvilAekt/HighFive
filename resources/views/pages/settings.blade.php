@@ -3,7 +3,7 @@
 @section('title', 'Pengaturan Akun - HIGH FIVE')
 
 @section('content')
-<div class="bg-primary-50/50 dark:bg-gray-900 min-h-screen py-12 transition-colors">
+<div class="bg-primary-50/50 dark:bg-onyx-800 min-h-screen py-12 transition-colors">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'profile' }">
         
         <!-- Header Section -->
@@ -88,7 +88,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     x-cloak class="bg-white dark:bg-gray-800 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-gray-700">
+                     x-cloak class="bg-white dark:bg-onyx-700 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-onyx-600">
                     
                     <h2 class="text-2xl font-bold text-primary-900 dark:text-white mb-8 flex items-center gap-3">
                         <i data-lucide="user" class="text-primary-400"></i> Informasi Profil
@@ -137,7 +137,7 @@
                             </label>
                             <div class="flex-1">
                                 <h3 class="text-sm font-bold text-primary-900 dark:text-white mb-1">Foto Profil</h3>
-                                <p class="text-xs text-primary-500 dark:text-gray-400 mb-3 leading-relaxed">Pilih gambar resolusi tinggi dengan format JPG atau PNG. Ukuran maksimal 2MB.</p>
+                                <p class="text-xs text-primary-500 dark:text-gray-400 mb-3 leading-relaxed">Pilih gambar resolusi tinggi dengan format JPG atau PNG. Ukuran maksimal 10MB.</p>
                                 <label for="avatar_upload" class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold tracking-widest text-primary-900 dark:text-white uppercase bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-600 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 transition-colors cursor-pointer shadow-sm">
                                     Pilih File Baru
                                 </label>
@@ -171,7 +171,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     x-cloak class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100">
+                     x-cloak class="bg-white dark:bg-onyx-700 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-onyx-600">
                     
                     <h2 class="text-2xl font-bold text-primary-900 mb-8 flex items-center gap-3">
                         <i data-lucide="shield-check" class="text-primary-400"></i> Akun & Keamanan
@@ -224,7 +224,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     x-cloak class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100" 
+                     x-cloak class="bg-white dark:bg-onyx-700 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-onyx-600" 
                      x-data="{ showForm: false }">
                     
                     <div class="flex items-center justify-between mb-8">
@@ -333,7 +333,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     x-cloak class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100">
+                     x-cloak class="bg-white dark:bg-onyx-700 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-onyx-600">
                     
                     <h2 class="text-2xl font-bold text-primary-900 mb-6 flex items-center gap-3">
                         <i data-lucide="credit-card" class="text-primary-400"></i> Info Pembayaran
@@ -378,7 +378,7 @@
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     x-cloak class="bg-white p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100">
+                     x-cloak class="bg-white dark:bg-onyx-700 p-8 md:p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-primary-100 dark:border-onyx-600">
                     
                     <h2 class="text-2xl font-bold text-primary-900 mb-8 flex items-center gap-3">
                         <i data-lucide="sliders" class="text-primary-400"></i> Preferensi Sistem
@@ -393,9 +393,9 @@
                         <div>
                             <h3 class="text-sm font-bold uppercase tracking-widest text-primary-900 mb-4">Mode Tampilan Web</h3>
                             <div class="grid grid-cols-2 gap-4">
-                                <label class="relative cursor-pointer">
+                                <label class="relative cursor-pointer" @click="darkMode = false">
                                     <input type="radio" name="theme" value="light" class="peer sr-only" {{ ($settings['theme'] ?? 'light') === 'light' ? 'checked' : '' }}>
-                                    <div class="p-5 border-2 rounded-xl transition-all peer-checked:border-black peer-checked:bg-primary-50 hover:bg-primary-50 border-primary-200 bg-white">
+                                    <div class="p-5 border-2 rounded-xl transition-all peer-checked:border-black peer-checked:bg-primary-50 hover:bg-primary-50 border-primary-200 bg-white dark:bg-onyx-800 dark:border-onyx-600 dark:peer-checked:border-white">
                                         <div class="flex flex-col items-center gap-3">
                                             <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-900">
                                                 <i data-lucide="sun" class="w-6 h-6"></i>
@@ -408,9 +408,9 @@
                                     </div>
                                 </label>
                                 
-                                <label class="relative cursor-pointer">
+                                <label class="relative cursor-pointer" @click="darkMode = true">
                                     <input type="radio" name="theme" value="dark" class="peer sr-only" {{ ($settings['theme'] ?? 'light') === 'dark' ? 'checked' : '' }}>
-                                    <div class="p-5 border-2 rounded-xl transition-all peer-checked:border-black peer-checked:bg-primary-900 hover:bg-primary-50 border-primary-200 bg-white">
+                                    <div class="p-5 border-2 rounded-xl transition-all peer-checked:border-black peer-checked:bg-primary-900 hover:bg-primary-50 border-primary-200 bg-white dark:bg-onyx-800 dark:border-onyx-600 dark:peer-checked:border-white">
                                         <div class="flex flex-col items-center gap-3">
                                             <div class="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white">
                                                 <i data-lucide="moon" class="w-6 h-6"></i>

@@ -18,6 +18,12 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
-        return view('pages.home', compact('brandProfile', 'categories', 'featuredProducts'));
+        $flashSaleProduct = Product::where('is_active', true)
+            ->where('is_flash_sale', true)
+            ->where('flash_sale_end', '>', \Carbon\Carbon::now())
+            ->orderBy('flash_sale_end', 'asc')
+            ->first();
+
+        return view('pages.home', compact('brandProfile', 'categories', 'featuredProducts', 'flashSaleProduct'));
     }
 }

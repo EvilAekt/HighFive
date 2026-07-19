@@ -1,38 +1,68 @@
 @props(['product'])
 
 @php
-$isWishlisted = false;
-if (auth()->check()) {
-    $isWishlisted = \App\Models\Wishlist::where('user_id', auth()->id())
-                    ->where('product_id', $product->id)
-                    ->exists();
-}
+    $isWishlisted = auth()->check() ? \App\Models\Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists() : false;
 @endphp
 
-<div x-data="{ activeImage: 0, images: {{ json_encode(array_merge([$product->thumbnail], $product->images->pluck('image_path')->toArray())) }} }" class="group block animate-fade-up">
-    <div class="bg-white border border-transparent hover:border-black transition-all duration-500 relative shadow-sm hover:shadow-2xl">
-        <div class="relative aspect-[3/4] bg-primary-50 overflow-hidden group/slider">
-            <a href="{{ route('product.show', $product->id) }}" class="block w-full h-full">
+<div x-data="{ activeImage: 0, images: {{ json_encode(collect([$product->thumbnail])->merge($product->images->pluck('image_path'))->filter()->unique()->values()->toArray()) }} }" class="group block animate-fade-up relative">
+    <div class="bg-white dark:bg-onyx-800 border border-transparent dark:border-onyx-700 hover:border-black dark:hover:border-onyx-500 transition-all duration-500 relative shadow-sm hover:shadow-2xl">
+        <div class="relative aspect-[3/4] bg-primary-50 dark:bg-onyx-900 overflow-hidden group/slider" x-data="{ loaded: false }">
+            <!-- Skeleton Loader (Shimmer) -->
+            <div x-show="!loaded" class="absolute inset-0 z-0 bg-gray-200 dark:bg-onyx-700 animate-pulse"></div>
+
+            <a href="{{ route('product.show', $product->id) }}" class="block w-full h-full z-10 relative">
                 @if($product->thumbnail)
                     <template x-for="(image, index) in images" :key="index">
-                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 absolute inset-0" x-transition.opacity.duration.500ms />
+                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 absolute inset-0 transition-opacity" :class="loaded ? 'opacity-100' : 'opacity-0'" x-transition.opacity.duration.500ms />
                     </template>
-                    <!-- Fallback for non-JS / initial load -->
-                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" x-show="false" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 absolute inset-0" />
+                    <!-- Preload / Event listener for the first image -->
+                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" x-show="false" @load="loaded = true" x-init="if($el.complete) loaded = true" class="w-full h-full object-cover absolute inset-0" />
                 @else
-                    <div class="w-full h-full flex items-center justify-center bg-primary-100 absolute inset-0">
-                        <span class="text-xs uppercase tracking-widest text-primary-400">No Image</span>
+                    <div class="w-full h-full flex items-center justify-center bg-primary-100 dark:bg-onyx-800 absolute inset-0">
+                        <span class="text-xs uppercase tracking-widest text-primary-400 dark:text-gray-500">No Image</span>
                     </div>
                 @endif
             </a>
 
+            <!-- Wishlist Button -->
+            <div class="absolute top-2 right-2 z-10" x-data="{ isWishlisted: {{ $isWishlisted ? 'true' : 'false' }}, loading: false }">
+                <button @click.prevent="
+                    @if(auth()->check())
+                        if(loading) return;
+                        loading = true;
+                        fetch('{{ route('wishlist.toggle') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ product_id: '{{ $product->id }}' })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.status === 'added') {
+                                isWishlisted = true;
+                            } else {
+                                isWishlisted = false;
+                            }
+                        })
+                        .finally(() => loading = false);
+                    @else
+                        window.location.href = '{{ route('login') }}';
+                    @endif
+                " class="w-8 h-8 flex items-center justify-center bg-white/90 dark:bg-onyx-800/90 hover:bg-white dark:hover:bg-onyx-700 text-black dark:text-white shadow-sm rounded-full backdrop-blur-sm transition-transform hover:scale-110">
+                    <i data-lucide="heart" class="w-4 h-4 transition-colors" :class="isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-500 dark:text-gray-400'"></i>
+                </button>
+            </div>
+
             <!-- Slider Controls -->
             <template x-if="images.length > 1">
                 <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 opacity-0 group-hover/slider:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <button @click.prevent="activeImage = (activeImage - 1 + images.length) % images.length" class="w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow pointer-events-auto rounded-full backdrop-blur-sm transition-transform hover:scale-110">
+                    <button @click.prevent="activeImage = (activeImage - 1 + images.length) % images.length" class="w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-onyx-800/80 hover:bg-white dark:hover:bg-onyx-700 text-black dark:text-white shadow pointer-events-auto rounded-full backdrop-blur-sm transition-transform hover:scale-110">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i>
                     </button>
-                    <button @click.prevent="activeImage = (activeImage + 1) % images.length" class="w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow pointer-events-auto rounded-full backdrop-blur-sm transition-transform hover:scale-110">
+                    <button @click.prevent="activeImage = (activeImage + 1) % images.length" class="w-8 h-8 flex items-center justify-center bg-white/80 dark:bg-onyx-800/80 hover:bg-white dark:hover:bg-onyx-700 text-black dark:text-white shadow pointer-events-auto rounded-full backdrop-blur-sm transition-transform hover:scale-110">
                         <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -42,23 +72,13 @@ if (auth()->check()) {
             <template x-if="images.length > 1">
                 <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover/slider:opacity-100 transition-opacity duration-300">
                     <template x-for="(image, index) in images" :key="index">
-                        <div class="w-1.5 h-1.5 rounded-full transition-colors duration-300" :class="activeImage === index ? 'bg-black' : 'bg-black/20'"></div>
+                        <div class="w-1.5 h-1.5 rounded-full transition-colors duration-300" :class="activeImage === index ? 'bg-black dark:bg-white' : 'bg-black/20 dark:bg-white/20'"></div>
                     </template>
                 </div>
             </template>
 
-            @auth
-            <form action="{{ route('wishlist.toggle') }}" method="POST" class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <button type="submit" class="p-2 bg-white border border-primary-200 hover:bg-black hover:text-white hover:border-black" aria-label="Toggle wishlist">
-                    <i data-lucide="heart" class="w-3.5 h-3.5 {{ $isWishlisted ? 'fill-black text-black' : '' }}"></i>
-                </button>
-            </form>
-            @endauth
-
             @if($product->total_stock == 0)
-                <div class="absolute inset-0 bg-white/80 flex items-center justify-center">
+                <div class="absolute inset-0 bg-white/80 dark:bg-onyx-900/80 flex items-center justify-center">
                     <span class="text-xs font-semibold uppercase tracking-widest bg-black text-white px-4 py-2">
                         Sold Out
                     </span>
@@ -68,26 +88,45 @@ if (auth()->check()) {
 
         <div class="p-4">
             @if($product->category)
-                <p class="text-[10px] text-primary-400 uppercase tracking-widest mb-1">
+                <p class="text-[10px] text-primary-400 dark:text-gray-500 uppercase tracking-widest mb-1">
                     {{ $product->category->name }}
                 </p>
             @endif
-            <h3 class="font-medium text-primary-900 mb-2 line-clamp-1 text-sm">
+            <h3 class="font-medium text-primary-900 dark:text-white mb-2 line-clamp-1 text-sm">
                 {{ $product->name }}
             </h3>
 
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-1">
-                    <i data-lucide="star" class="w-3 h-3 fill-black text-black"></i>
-                    <span class="text-xs text-primary-500">
+                    <i data-lucide="star" class="w-3 h-3 fill-black text-black dark:fill-yellow-400 dark:text-yellow-400"></i>
+                    <span class="text-xs text-primary-500 dark:text-gray-400">
                         {{ number_format($product->average_rating, 1) }}
-                        <span class="text-primary-400 ml-1">({{ $product->review_count }})</span>
+                        <span class="text-primary-400 dark:text-gray-500 ml-1">({{ $product->review_count }})</span>
                     </span>
                 </div>
-                <p class="font-semibold text-primary-900 text-sm">
-                    {{ formatPrice($product->price) }}
-                </p>
+                <div class="flex flex-col items-end">
+                    @php
+                        $isFlashSaleActive = $product->is_flash_sale && \Carbon\Carbon::now()->lt($product->flash_sale_end);
+                    @endphp
+                    
+                    @if($isFlashSaleActive)
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-primary-400 dark:text-gray-500 line-through">{{ formatPrice($product->price) }}</span>
+                            <span class="font-bold text-red-600 dark:text-red-400 text-sm">{{ formatPrice($product->flash_sale_price) }}</span>
+                        </div>
+                    @else
+                        <p class="font-semibold text-primary-900 dark:text-white text-sm">
+                            {{ formatPrice($product->price) }}
+                        </p>
+                    @endif
+                </div>
             </div>
         </div>
+        
+        @if(isset($isFlashSaleActive) && $isFlashSaleActive)
+            <div class="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 shadow-md">
+                Flash Sale
+            </div>
+        @endif
     </div>
 </div>

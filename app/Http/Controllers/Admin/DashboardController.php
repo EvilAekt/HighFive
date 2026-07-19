@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
             ->join('products', 'products.id', '=', 'product_variants.product_id')
-            ->where('orders.status', 'paid')
+            ->whereIn('orders.status', ['processing', 'shipped', 'delivered'])
             ->where('orders.created_at', '>=', $fourMonthsAgo)
             ->select('products.name', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as total_sold'))
             ->groupBy('products.id', 'products.name')

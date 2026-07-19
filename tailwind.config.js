@@ -31,11 +31,38 @@ export default {
                     light: '#333333',
                     dark: '#000000',
                 },
+                onyx: {
+                    50: '#f4f4f4',
+                    100: '#e8e8e8',
+                    200: '#c5c5c5',
+                    300: '#a3a3a3',
+                    400: '#5e5e5e',
+                    500: '#1a1a1a',
+                    600: '#171717',
+                    700: '#141414',
+                    800: '#121212',
+                    900: '#0f0f0f',
+                    950: '#0a0a0a',
+                },
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
                 serif: ['Playfair Display', 'Georgia', 'serif'],
             },
+            keyframes: {
+                'fade-in': {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                'fade-up': {
+                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                }
+            },
+            animation: {
+                'fade-in': 'fade-in 0.5s ease-out',
+                'fade-up': 'fade-up 0.5s ease-out forwards',
+            }
         },
     },
     plugins: [

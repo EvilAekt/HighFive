@@ -26,10 +26,25 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         
         $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled'
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+            'resi_number' => 'nullable|string'
         ]);
 
-        $order->update(['status' => $request->status]);
+        $oldStatus = $order->status;
+
+        $order->update([
+            'status' => $request->status,
+            'resi_number' => $request->resi_number ?? $order->resi_number
+        ]);
+
+        // Send email if status changed to shipped
+        if ($oldStatus !== 'shipped' && $request->status === 'shipped') {
+            try {
+                \Illuminate\Support\Facades\Mail::to($order->user->email)->send(new \App\Mail\OrderShipped($order));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send shipped email: " . $e->getMessage());
+            }
+        }
 
         return back()->with('success', 'Status pesanan berhasil diupdate');
     }

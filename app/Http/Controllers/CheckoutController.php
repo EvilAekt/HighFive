@@ -25,7 +25,7 @@ class CheckoutController extends Controller
         }
 
         $subtotal = $carts->sum(function ($cart) {
-            return $cart->quantity * $cart->variant->product->price;
+            return $cart->quantity * $cart->variant->product->current_price;
         });
 
         // Hardcode shipping cost for now, as in original React app
@@ -76,7 +76,7 @@ class CheckoutController extends Controller
 
         // Get subtotal
         $subtotal = Cart::where('user_id', auth()->id())->get()->sum(function ($cart) {
-            return $cart->quantity * $cart->variant->product->price;
+            return $cart->quantity * $cart->variant->product->current_price;
         });
 
         if ($subtotal < $coupon->min_purchase) {
@@ -92,7 +92,14 @@ class CheckoutController extends Controller
         $request->validate([
             'address' => 'required|string|min:10',
             'phone' => 'required|string|min:10',
+            'shipping_province' => 'required|string',
+            'shipping_city' => 'required|string',
+            'shipping_city_id' => 'required|string',
+            'shipping_courier' => 'required|string',
+            'shipping_service' => 'required|string',
         ]);
+
+        $fullAddress = $request->address . "\n" . $request->shipping_city . ", " . $request->shipping_province;
 
         $user = auth()->user();
         
@@ -113,12 +120,25 @@ class CheckoutController extends Controller
         try {
             DB::beginTransaction();
 
+            // Lock variants to prevent race conditions (negative stock)
+            $variantIds = $carts->pluck('product_variant_id')->toArray();
+            $lockedVariants = \App\Models\ProductVariant::whereIn('id', $variantIds)->lockForUpdate()->get();
+
             $subtotal = 0;
+            $totalWeight = 0;
             $itemsForMidtrans = [];
 
             foreach ($carts as $cart) {
-                $price = $cart->variant->product->price;
+                // Verify stock availability
+                $lockedVariant = $lockedVariants->firstWhere('id', $cart->product_variant_id);
+                if (!$lockedVariant || $lockedVariant->stock < $cart->quantity) {
+                    DB::rollBack();
+                    return back()->with('error', 'Maaf, stok untuk produk ' . $cart->variant->product->name . ' (' . $cart->variant->size . ') tidak mencukupi atau sudah habis.');
+                }
+
+                $price = $cart->variant->product->current_price;
                 $subtotal += $price * $cart->quantity;
+                $totalWeight += ($cart->variant->product->weight * $cart->quantity);
                 
                 $itemsForMidtrans[] = [
                     'id' => $cart->product_variant_id,
@@ -128,7 +148,34 @@ class CheckoutController extends Controller
                 ];
             }
 
-            $shippingCost = $subtotal > 500000 ? 0 : 25000;
+            // Calculate shipping from RajaOngkir
+            $shippingCost = 0;
+            if ($subtotal <= 500000) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(5)->withHeaders([
+                        'key' => env('RAJAONGKIR_API_KEY')
+                    ])->post(env('RAJAONGKIR_BASE_URL', 'https://api.rajaongkir.com/starter') . "/cost", [
+                        'origin' => env('RAJAONGKIR_ORIGIN_CITY', 501),
+                        'destination' => $request->shipping_city_id,
+                        'weight' => $totalWeight > 0 ? $totalWeight : 1000,
+                        'courier' => strtolower($request->shipping_courier)
+                    ]);
+                    
+                    if (!$response->successful()) throw new \Exception('API Error');
+
+                    $costs = $response->json()['rajaongkir']['results'][0]['costs'] ?? [];
+                    $selectedCostObj = collect($costs)->firstWhere('service', $request->shipping_service);
+                    
+                    if ($selectedCostObj) {
+                        $shippingCost = $selectedCostObj['cost'][0]['value'];
+                    } else {
+                        throw new \Exception('Invalid shipping service selected');
+                    }
+                } catch (\Exception $e) {
+                    // Fallback to mock cost for local dev if RajaOngkir fails
+                    $shippingCost = $request->shipping_service === 'REG' ? 25000 : 45000;
+                }
+            }
 
             // Apply coupon logic
             $discountAmount = 0;
@@ -155,8 +202,10 @@ class CheckoutController extends Controller
                 'user_id' => $user->id,
                 'order_code' => $orderCode,
                 'total_price' => $totalPrice,
-                'shipping_address' => $request->address,
+                'shipping_address' => $fullAddress,
                 'shipping_cost' => $shippingCost,
+                'shipping_courier' => strtoupper($request->shipping_courier),
+                'shipping_service' => $request->shipping_service,
                 'coupon_code' => $appliedCouponCode,
                 'discount_amount' => $discountAmount,
                 'status' => 'pending'
@@ -167,11 +216,12 @@ class CheckoutController extends Controller
                     'order_id' => $order->id,
                     'product_variant_id' => $cart->product_variant_id,
                     'quantity' => $cart->quantity,
-                    'price' => $cart->variant->product->price,
+                    'price' => $cart->variant->product->current_price,
                 ]);
 
-                // Reduce stock
-                $cart->variant->decrement('stock', $cart->quantity);
+                // Reduce stock using the locked variant
+                $lockedVariant = $lockedVariants->firstWhere('id', $cart->product_variant_id);
+                $lockedVariant->decrement('stock', $cart->quantity);
             }
 
             // Get snap token

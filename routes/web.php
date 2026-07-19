@@ -26,6 +26,14 @@ Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
 Route::post('/midtrans/callback', [MidtransController::class, 'callback']);
 
+// Chat API (Public for guests too)
+Route::get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+
+// Socialite Routes
+Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialiteController::class, 'redirect'])->name('socialite.redirect');
+Route::get('/auth/{provider}/callback', [\App\Http\Controllers\Auth\SocialiteController::class, 'callback'])->name('socialite.callback');
+
 // Static Pages
 Route::view('/faq', 'pages.faq')->name('page.faq');
 Route::view('/pengiriman', 'pages.shipping')->name('page.shipping');
@@ -53,6 +61,7 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 
     // Settings
@@ -64,12 +73,22 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/settings/address/{address}/primary', [\App\Http\Controllers\SettingsController::class, 'setPrimaryAddress'])->name('settings.address.primary');
     Route::put('/settings/bank', [\App\Http\Controllers\SettingsController::class, 'updateBank'])->name('settings.bank');
     Route::put('/settings/preferences', [\App\Http\Controllers\SettingsController::class, 'updatePreferences'])->name('settings.preferences');
+
+    // RajaOngkir API
+    Route::get('/api/rajaongkir/provinces', [\App\Http\Controllers\RajaOngkirController::class, 'getProvinces']);
+    Route::get('/api/rajaongkir/cities/{provinceId}', [\App\Http\Controllers\RajaOngkirController::class, 'getCities']);
+    Route::post('/api/rajaongkir/cost', [\App\Http\Controllers\RajaOngkirController::class, 'getCost']);
 });
 
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Chat
+    Route::get('/chat', [\App\Http\Controllers\Admin\ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/{sessionId}', [\App\Http\Controllers\Admin\ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::post('/chat/{sessionId}/reply', [\App\Http\Controllers\Admin\ChatController::class, 'reply'])->name('chat.reply');
+
     Route::resource('products', AdminProductController::class)->except(['create', 'edit', 'show']);
     
     // Coupons

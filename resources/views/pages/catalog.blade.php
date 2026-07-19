@@ -32,6 +32,12 @@
                     @if(request('q'))
                         <input type="hidden" name="q" value="{{ request('q') }}">
                     @endif
+                    @if(request('min_price'))
+                        <input type="hidden" name="min_price" value="{{ request('min_price') }}">
+                    @endif
+                    @if(request('max_price'))
+                        <input type="hidden" name="max_price" value="{{ request('max_price') }}">
+                    @endif
                     
                     <div class="relative">
                         <select name="sort" onchange="document.getElementById('sortForm').submit()" class="appearance-none bg-white border border-primary-300 py-2 pl-4 pr-10 text-sm focus:outline-none focus:border-black rounded-none cursor-pointer">
@@ -46,40 +52,107 @@
         </div>
     </div>
 
-    <!-- Active Search Filter -->
-    @if(request('q'))
-        <div class="flex items-center gap-2 mb-8">
-            <span class="text-sm text-primary-600">Hasil pencarian untuk:</span>
-            <span class="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-sm font-medium">
-                "{{ request('q') }}"
-                <a href="{{ route('catalog', ['category' => request('category'), 'sort' => request('sort')]) }}" class="hover:text-red-500">
-                    <i data-lucide="x" class="w-3 h-3"></i>
-                </a>
-            </span>
-        </div>
-    @endif
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Filters -->
+        <div class="w-full lg:w-1/4 flex-shrink-0">
+            <div class="bg-white border border-primary-200 p-6 sticky top-28">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold uppercase tracking-widest">Filter</h2>
+                    <a href="{{ route('catalog') }}" class="text-xs text-primary-500 hover:text-black hover:underline">Reset</a>
+                </div>
+                
+                <form id="filterForm" action="{{ route('catalog') }}" method="GET" x-data x-on:change="$el.submit()">
+                    <!-- Preserve search and sort -->
+                    @if(request('q'))
+                        <input type="hidden" name="q" value="{{ request('q') }}">
+                    @endif
+                    @if(request('sort'))
+                        <input type="hidden" name="sort" value="{{ request('sort') }}">
+                    @endif
 
-    <!-- Product Grid -->
-    @if($products->isEmpty())
-        <div class="text-center py-24 bg-primary-50 border border-primary-200">
-            <i data-lucide="search" class="w-12 h-12 mx-auto text-primary-300 mb-4"></i>
-            <h3 class="text-lg font-medium text-primary-900 mb-2">Produk tidak ditemukan</h3>
-            <p class="text-primary-500 mb-6">Maaf, kami tidak dapat menemukan produk yang sesuai dengan pencarian Anda.</p>
-            <a href="{{ route('catalog') }}" class="btn-primary">
-                Lihat Semua Produk
-            </a>
+                    <!-- Category Filter -->
+                    <div class="mb-6">
+                        <h3 class="text-xs font-semibold text-primary-900 uppercase mb-3">Kategori</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="radio" name="category" value="all" {{ request('category', 'all') === 'all' ? 'checked' : '' }} class="w-4 h-4 text-black focus:ring-black border-primary-300">
+                                <span class="text-sm text-primary-600 group-hover:text-black">Semua Produk</span>
+                            </label>
+                            @php
+                                $categories = \App\Models\Category::all();
+                            @endphp
+                            @foreach($categories as $cat)
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="category" value="{{ $cat->slug }}" {{ request('category') === $cat->slug ? 'checked' : '' }} class="w-4 h-4 text-black focus:ring-black border-primary-300">
+                                    <span class="text-sm text-primary-600 group-hover:text-black">{{ $cat->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div>
+                        <h3 class="text-xs font-semibold text-primary-900 uppercase mb-3">Rentang Harga</h3>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-primary-500">Rp</span>
+                                <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min" class="w-full pl-7 pr-2 py-1.5 text-sm border border-primary-300 focus:outline-none focus:border-black" min="0">
+                            </div>
+                            <span class="text-primary-400">-</span>
+                            <div class="relative flex-1">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-primary-500">Rp</span>
+                                <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max" class="w-full pl-7 pr-2 py-1.5 text-sm border border-primary-300 focus:outline-none focus:border-black" min="0">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full mt-3 btn-secondary text-xs py-1.5">Terapkan Harga</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    @else
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            @foreach($products as $product)
-                @include('components.product-card', ['product' => $product])
-            @endforeach
+
+        <!-- Product Grid Content -->
+        <div class="w-full lg:w-3/4">
+            <!-- Active Search Filter -->
+            @if(request('q') || request('min_price') || request('max_price'))
+                <div class="flex flex-wrap items-center gap-2 mb-6">
+                    <span class="text-sm text-primary-600">Filter Aktif:</span>
+                    
+                    @if(request('q'))
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-sm font-medium">
+                            Pencarian: "{{ request('q') }}"
+                            <a href="{{ route('catalog', array_merge(request()->except(['q', 'page']))) }}" class="hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></a>
+                        </span>
+                    @endif
+                    
+                    @if(request('min_price') || request('max_price'))
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-sm font-medium">
+                            Harga: {{ request('min_price') ? 'Rp ' . number_format(request('min_price'),0,',','.') : '0' }} - {{ request('max_price') ? 'Rp ' . number_format(request('max_price'),0,',','.') : 'Max' }}
+                            <a href="{{ route('catalog', array_merge(request()->except(['min_price', 'max_price', 'page']))) }}" class="hover:text-red-500"><i data-lucide="x" class="w-3 h-3"></i></a>
+                        </span>
+                    @endif
+                </div>
+            @endif
+
+            @if($products->isEmpty())
+                <div class="text-center py-24 bg-primary-50 border border-primary-200">
+                    <i data-lucide="search" class="w-12 h-12 mx-auto text-primary-300 mb-4"></i>
+                    <h3 class="text-lg font-medium text-primary-900 mb-2">Produk tidak ditemukan</h3>
+                    <p class="text-primary-500 mb-6">Maaf, kami tidak dapat menemukan produk yang sesuai dengan filter Anda.</p>
+                    <a href="{{ route('catalog') }}" class="btn-primary">Reset Filter</a>
+                </div>
+            @else
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    @foreach($products as $product)
+                        @include('components.product-card', ['product' => $product])
+                    @endforeach
+                </div>
+                
+                <!-- Pagination -->
+                <div class="mt-12 flex justify-center">
+                    {{ $products->links() }}
+                </div>
+            @endif
         </div>
-        
-        <!-- Pagination -->
-        <div class="mt-12 flex justify-center">
-            {{ $products->links() }}
-        </div>
-    @endif
+    </div>
 </div>
 @endsection

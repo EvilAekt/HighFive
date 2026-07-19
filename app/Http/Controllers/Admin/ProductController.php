@@ -22,6 +22,7 @@ class ProductController extends Controller
             'name' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
+            'weight' => 'required|integer|min:1',
             'image_urls' => 'nullable|array',
             'image_urls.*' => 'nullable|url',
             'variants' => 'required|array|min:1',
@@ -29,9 +30,18 @@ class ProductController extends Controller
             'variants.*.color' => 'required|string',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.additional_price' => 'nullable|numeric|min:0',
+            'is_flash_sale' => 'nullable|boolean',
+            'flash_sale_price' => 'nullable|numeric|min:0',
+            'flash_sale_end' => 'nullable|date',
         ]);
 
         $productData = $request->except(['image_urls', 'variants']);
+        // Format checkbox value
+        $productData['is_flash_sale'] = $request->has('is_flash_sale');
+        if (!$productData['is_flash_sale']) {
+            $productData['flash_sale_price'] = null;
+            $productData['flash_sale_end'] = null;
+        }
         
         // Get the first valid image url as thumbnail
         $imageUrls = array_filter($request->image_urls ?? []);
@@ -70,6 +80,7 @@ class ProductController extends Controller
             'name' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
+            'weight' => 'required|integer|min:1',
             'image_urls' => 'nullable|array',
             'image_urls.*' => 'nullable|url',
             'variants' => 'required|array|min:1',
@@ -77,9 +88,17 @@ class ProductController extends Controller
             'variants.*.color' => 'required|string',
             'variants.*.stock' => 'required|integer|min:0',
             'variants.*.additional_price' => 'nullable|numeric|min:0',
+            'is_flash_sale' => 'nullable|boolean',
+            'flash_sale_price' => 'nullable|numeric|min:0',
+            'flash_sale_end' => 'nullable|date',
         ]);
 
         $productData = $request->except(['image_urls', 'variants']);
+        $productData['is_flash_sale'] = $request->has('is_flash_sale');
+        if (!$productData['is_flash_sale']) {
+            $productData['flash_sale_price'] = null;
+            $productData['flash_sale_end'] = null;
+        }
         
         $imageUrls = array_filter($request->image_urls ?? []);
         if (count($imageUrls) > 0) {
@@ -97,15 +116,44 @@ class ProductController extends Controller
 
         $product->update($productData);
 
-        // Update variants (delete old and insert new for simplicity, or sync if id exists)
-        $product->variants()->delete();
+        // Update variants (prevent FK constraint violation by syncing rather than blanket delete)
+        $existingVariantIds = $product->variants()->pluck('id')->toArray();
+        $submittedVariantIds = [];
+
         foreach ($request->variants as $variant) {
-            $product->variants()->create([
-                'size' => $variant['size'],
-                'color' => $variant['color'],
-                'stock' => $variant['stock'],
-                'additional_price' => $variant['additional_price'] ?? 0,
-            ]);
+            if (isset($variant['id']) && in_array($variant['id'], $existingVariantIds)) {
+                // Update existing
+                $product->variants()->where('id', $variant['id'])->update([
+                    'size' => $variant['size'],
+                    'color' => $variant['color'],
+                    'stock' => $variant['stock'],
+                    'additional_price' => $variant['additional_price'] ?? 0,
+                ]);
+                $submittedVariantIds[] = $variant['id'];
+            } else {
+                // Create new
+                $newVariant = $product->variants()->create([
+                    'size' => $variant['size'],
+                    'color' => $variant['color'],
+                    'stock' => $variant['stock'],
+                    'additional_price' => $variant['additional_price'] ?? 0,
+                ]);
+                $submittedVariantIds[] = $newVariant->id;
+            }
+        }
+
+        // Handle deletions of variants that were removed in the UI
+        $variantsToDelete = array_diff($existingVariantIds, $submittedVariantIds);
+        if (!empty($variantsToDelete)) {
+            foreach ($variantsToDelete as $varId) {
+                try {
+                    $product->variants()->where('id', $varId)->delete();
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Cannot delete because it's referenced in order_items
+                    // Set stock to 0 instead of deleting
+                    $product->variants()->where('id', $varId)->update(['stock' => 0]);
+                }
+            }
         }
 
         return back()->with('success', 'Produk dan varian berhasil diupdate');

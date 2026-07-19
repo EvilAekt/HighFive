@@ -19,9 +19,19 @@ class CatalogController extends Controller
         }
 
         // Search
-        if ($request->has('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%')
+        if ($request->filled('q')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->q . '%')
                   ->orWhere('description', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        // Price Filter
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
         }
 
         // Sort

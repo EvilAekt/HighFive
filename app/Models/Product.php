@@ -11,7 +11,17 @@ class Product extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'category_id', 'name', 'description', 'price', 'thumbnail', 'is_active'
+        'category_id',
+        'name',
+        'slug',
+        'description',
+        'price',
+        'weight',
+        'thumbnail',
+        'is_active',
+        'is_flash_sale',
+        'flash_sale_price',
+        'flash_sale_end'
     ];
 
     public function category()
@@ -47,5 +57,15 @@ class Product extends Model
     public function getTotalStockAttribute()
     {
         return $this->variants()->sum('stock');
+    }
+
+    public function getIsFlashSaleActiveAttribute()
+    {
+        return $this->is_flash_sale && $this->flash_sale_end && \Carbon\Carbon::now()->lt($this->flash_sale_end);
+    }
+
+    public function getCurrentPriceAttribute()
+    {
+        return $this->is_flash_sale_active ? $this->flash_sale_price : $this->price;
     }
 }

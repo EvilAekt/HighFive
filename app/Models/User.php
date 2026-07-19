@@ -27,7 +27,10 @@ class User extends Authenticatable
         'bank_account',
         'bank_account_name',
         'settings',
-        'avatar'
+        'avatar',
+        'provider',
+        'provider_id',
+        'provider_token'
     ];
 
     /**

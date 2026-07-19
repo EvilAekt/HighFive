@@ -18,6 +18,9 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -64,11 +67,23 @@
                         Pelanggan
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('admin.chat.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('admin.chat.*') ? 'bg-white text-primary-900' : 'text-primary-300 hover:bg-primary-800 hover:text-white' }}">
+                        <i data-lucide="message-square-text" class="w-5 h-5"></i>
+                        Live Chat
+                    </a>
+                </li>
 
                 <li>
                     <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors {{ request()->routeIs('settings.*') ? 'bg-white text-primary-900' : 'text-primary-300 hover:bg-primary-800 hover:text-white' }}">
                         <i data-lucide="settings" class="w-5 h-5"></i>
                         Pengaturan Akun
+                    </a>
+                </li>
+                <li class="pt-4 mt-2 border-t border-primary-800">
+                    <a href="{{ route('home') }}" class="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-primary-300 hover:bg-primary-800 hover:text-white">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                        Kembali ke Beranda
                     </a>
                 </li>
             </ul>

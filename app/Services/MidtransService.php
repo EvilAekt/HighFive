@@ -49,7 +49,9 @@ class MidtransService
             ],
             'item_details' => $itemDetails,
             'callbacks' => [
-                'finish' => route('orders.show', $order->id)
+                'finish' => route('orders.show', $order->id),
+                'error' => route('orders.show', $order->id),
+                'unfinish' => route('orders.show', $order->id)
             ],
         ];
 

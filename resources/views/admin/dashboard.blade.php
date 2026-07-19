@@ -62,13 +62,8 @@
         <!-- Orders by Status -->
         <div class="bg-white border border-primary-200 p-6">
             <h2 class="text-lg font-semibold mb-4">Pesanan per Status</h2>
-            <div class="space-y-3">
-                @foreach($ordersByStatus as $status => $count)
-                    <div class="flex items-center justify-between">
-                        <span class="text-primary-600 capitalize">{{ $status }}</span>
-                        <span class="font-semibold">{{ $count }}</span>
-                    </div>
-                @endforeach
+            <div class="relative h-64 w-full">
+                <canvas id="orderStatusChart"></canvas>
             </div>
         </div>
 
@@ -144,30 +139,69 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold">Laporan Penjualan (4 Bulan Terakhir)</h2>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="text-left text-sm text-primary-600 border-b border-primary-200">
-                            <th class="pb-3 font-medium">Nama Produk</th>
-                            <th class="pb-3 font-medium text-right">Total Terjual (Item)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($sales4Months as $sale)
-                            <tr class="border-b border-primary-100 last:border-0 hover:bg-primary-50">
-                                <td class="py-3 text-sm font-medium">{{ $sale->name }}</td>
-                                <td class="py-3 text-sm text-right font-bold text-primary-900">{{ $sale->total_sold }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="2" class="py-6 text-center text-primary-500">Belum ada penjualan dalam 4 bulan terakhir.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="relative h-72 w-full">
+                <canvas id="salesChart"></canvas>
             </div>
         </div>
 
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Orders By Status Chart
+    const statusData = {!! json_encode($ordersByStatus) !!};
+    const ctxStatus = document.getElementById('orderStatusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusData).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+            datasets: [{
+                data: Object.values(statusData),
+                backgroundColor: [
+                    '#f59e0b', // pending
+                    '#3b82f6', // processing
+                    '#8b5cf6', // shipped
+                    '#10b981', // completed
+                    '#ef4444'  // cancelled
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+
+    // Sales Chart
+    const salesData = {!! json_encode($sales4Months) !!};
+    const ctxSales = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctxSales, {
+        type: 'bar',
+        data: {
+            labels: salesData.map(item => item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name),
+            datasets: [{
+                label: 'Total Terjual (Item)',
+                data: salesData.map(item => item.total_sold),
+                backgroundColor: '#000000',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
+@endpush
 @endsection

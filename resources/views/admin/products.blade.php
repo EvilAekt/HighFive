@@ -4,7 +4,7 @@
 <div x-data="{ modalOpen: false, editMode: false, currentId: null }">
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-primary-900">Kelola Produk</h1>
-        <button @click="modalOpen = true; editMode = false; currentId = null; document.getElementById('productForm').reset(); document.dispatchEvent(new CustomEvent('reset-images'));" class="btn-primary flex items-center gap-2 px-4 py-2 text-xs">
+        <button @click="modalOpen = true; editMode = false; currentId = null; document.getElementById('productForm').reset(); window.dispatchEvent(new CustomEvent('reset-images'));" class="btn-primary flex items-center gap-2 px-4 py-2 text-xs">
             <i data-lucide="plus" class="w-4 h-4"></i> Tambah Produk
         </button>
     </div>
@@ -47,7 +47,14 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <p class="font-medium">{{ $product->name }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium">{{ $product->name }}</p>
+                                            @if($product->is_flash_sale)
+                                                <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                                    <i data-lucide="zap" class="w-3 h-3 fill-red-700"></i> Flash Sale
+                                                </span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-primary-500 truncate max-w-xs">{{ $product->description }}</p>
                                     </div>
                                 </div>
@@ -69,8 +76,12 @@
                                             'description' => $product->description,
                                             'price' => $product->price,
                                             'category_id' => $product->category_id,
+                                            'weight' => $product->weight,
                                             'is_active' => $product->is_active,
                                             'thumbnail' => $product->thumbnail,
+                                            'is_flash_sale' => $product->is_flash_sale,
+                                            'flash_sale_price' => $product->flash_sale_price,
+                                            'flash_sale_end' => $product->flash_sale_end ? \Carbon\Carbon::parse($product->flash_sale_end)->format('Y-m-d\TH:i') : null,
                                             'images' => $product->images->toArray(),
                                             'variants' => $product->variants->toArray()
                                         ]) !!}
@@ -129,6 +140,11 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium mb-1">Berat (Gram) *</label>
+                    <input type="number" name="weight" id="weight" class="input-field" min="1" value="1000" required />
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium mb-1">Kategori *</label>
                     <select name="category_id" id="category_id" class="input-field" required>
                         <option value="">Pilih Kategori</option>
@@ -153,10 +169,11 @@
                     </button>
                 </div>
 
-                <div x-data="{ variants: [{ size: '', color: '', stock: 0, additional_price: 0 }] }" @reset-images.window="variants = [{ size: '', color: '', stock: 0, additional_price: 0 }]" @load-variants.window="variants = $event.detail.length ? $event.detail : [{ size: '', color: '', stock: 0, additional_price: 0 }]">
+                <div x-data="{ variants: [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }] }" @reset-images.window="variants = [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }]" @load-variants.window="variants = $event.detail.length ? $event.detail : [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }]">
                     <label class="block text-sm font-medium mb-2">Stok & Varian (Wajib)</label>
                     <template x-for="(variant, index) in variants" :key="index">
                         <div class="bg-primary-50 p-3 border border-primary-200 mb-2 relative">
+                            <input type="hidden" :name="'variants['+index+'][id]'" x-model="variant.id" />
                             <button type="button" @click="variants.splice(index, 1)" x-show="variants.length > 1" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
@@ -182,12 +199,31 @@
                             </div>
                         </div>
                     </template>
-                    <button type="button" @click="variants.push({ size: '', color: '', stock: 0, additional_price: 0 })" class="text-xs font-semibold uppercase tracking-widest text-primary-600 hover:text-black mt-2 flex items-center gap-1">
+                    <button type="button" @click="variants.push({ id: '', size: '', color: '', stock: 0, additional_price: 0 })" class="text-xs font-semibold uppercase tracking-widest text-primary-600 hover:text-black mt-2 flex items-center gap-1">
                         <i data-lucide="plus" class="w-3 h-3"></i> Tambah Varian Baru
                     </button>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <!-- Flash Sale Section -->
+                <div x-data="{ isFlashSale: false }" @load-flash.window="isFlashSale = $event.detail; document.getElementById('is_flash_sale').checked = $event.detail;" @reset-images.window="isFlashSale = false; document.getElementById('is_flash_sale').checked = false;" class="bg-red-50 p-4 border border-red-200 mt-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <input type="checkbox" name="is_flash_sale" id="is_flash_sale" value="1" x-model="isFlashSale" class="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded" />
+                        <label for="is_flash_sale" class="text-sm font-bold text-red-700 uppercase">Aktifkan Flash Sale</label>
+                    </div>
+                    
+                    <div x-show="isFlashSale" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-red-700 mb-1">Harga Flash Sale (Rp) *</label>
+                            <input type="number" name="flash_sale_price" id="flash_sale_price" class="input-field border-red-300 focus:border-red-500 focus:ring-red-500" min="0" :required="isFlashSale" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-red-700 mb-1">Batas Waktu (End Date) *</label>
+                            <input type="datetime-local" name="flash_sale_end" id="flash_sale_end" class="input-field border-red-300 focus:border-red-500 focus:ring-red-500" :required="isFlashSale" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mt-4">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" id="is_active" value="1" checked class="w-4 h-4" />
                     <label for="is_active" class="text-sm">Produk aktif</label>
@@ -210,8 +246,13 @@
             document.getElementById('name').value = data.name || '';
             document.getElementById('description').value = data.description || '';
             document.getElementById('price').value = data.price || 0;
+            document.getElementById('weight').value = data.weight || 1000;
             document.getElementById('category_id').value = data.category_id || '';
             document.getElementById('is_active').checked = !!data.is_active;
+            
+            document.getElementById('flash_sale_price').value = data.flash_sale_price || '';
+            document.getElementById('flash_sale_end').value = data.flash_sale_end || '';
+            window.dispatchEvent(new CustomEvent('load-flash', { detail: !!data.is_flash_sale }));
             
             let images = [];
             if (data.images && data.images.length > 0) {
@@ -221,20 +262,21 @@
             }
             if (images.length === 0) images.push('');
             
-            document.dispatchEvent(new CustomEvent('load-images', { detail: images }));
+            window.dispatchEvent(new CustomEvent('load-images', { detail: images }));
             
             let variants = [];
             if (data.variants && data.variants.length > 0) {
                 variants = data.variants.map(v => ({
+                    id: v.id,
                     size: v.size,
                     color: v.color,
                     stock: v.stock,
                     additional_price: v.additional_price
                 }));
             }
-            if (variants.length === 0) variants.push({ size: '', color: '', stock: 0, additional_price: 0 });
+            if (variants.length === 0) variants.push({ id: '', size: '', color: '', stock: 0, additional_price: 0 });
             
-            document.dispatchEvent(new CustomEvent('load-variants', { detail: variants }));
+            window.dispatchEvent(new CustomEvent('load-variants', { detail: variants }));
             
             document.getElementById('productForm').action = '/admin/products/' + id;
             document.getElementById('methodField').value = 'PUT';

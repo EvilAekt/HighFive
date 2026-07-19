@@ -39,6 +39,13 @@ class CartController extends Controller
             ]);
         }
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk ditambahkan ke keranjang'
+            ]);
+        }
+
         return redirect()->route('cart.index')->with('success', 'Produk ditambahkan ke keranjang');
     }
 

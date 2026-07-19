@@ -15,8 +15,8 @@ class ReviewController extends Controller
             'product_id' => 'required|exists:products,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|max:2048',
-            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo|max:10240',
+            'image' => 'nullable|image',
+            'video' => 'nullable|mimetypes:video/mp4,video/quicktime,video/x-msvideo',
         ]);
 
         // Check if order belongs to user and is paid

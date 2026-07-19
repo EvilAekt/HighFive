@@ -38,6 +38,13 @@
                         Bayar Sekarang
                     </button>
                     
+                    <form action="{{ route('orders.cancel', $order->id) }}" method="POST" class="mt-2" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat diubah.')">
+                        @csrf
+                        <button type="submit" class="w-full border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 font-bold uppercase tracking-widest text-sm py-3 transition-colors">
+                            Batalkan Pesanan
+                        </button>
+                    </form>
+                    
                     @push('scripts')
                     <script type="text/javascript">
                         var payButton = document.getElementById('pay-button');
@@ -169,10 +176,36 @@
         </div>
 
         <div class="mb-8 pb-8 border-b border-primary-200">
-            <h2 class="text-lg font-bold uppercase tracking-widest mb-4">Alamat Pengiriman</h2>
-            <p class="text-sm text-primary-600 whitespace-pre-line leading-relaxed">
-                {{ $order->shipping_address }}
-            </p>
+            <h2 class="text-lg font-bold uppercase tracking-widest mb-4">Alamat & Pengiriman</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2">Alamat</h3>
+                    <p class="text-sm text-primary-600 whitespace-pre-line leading-relaxed">
+                        {{ $order->shipping_address }}
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2">Ekspedisi</h3>
+                    @if($order->shipping_courier && $order->shipping_service)
+                        <p class="text-sm text-primary-900 font-medium">
+                            {{ $order->shipping_courier }} - {{ $order->shipping_service }}
+                        </p>
+                    @else
+                        <p class="text-sm text-primary-500 italic">Standar</p>
+                    @endif
+
+                    @if($order->status === 'shipped' || $order->status === 'delivered')
+                        <h3 class="text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2 mt-4">Nomor Resi</h3>
+                        @if($order->resi_number)
+                            <div class="bg-primary-50 border border-primary-200 px-3 py-2 inline-flex items-center gap-2">
+                                <span class="text-sm font-mono font-bold text-primary-900">{{ $order->resi_number }}</span>
+                            </div>
+                        @else
+                            <p class="text-sm text-primary-500 italic">Belum diinput</p>
+                        @endif
+                    @endif
+                </div>
+            </div>
         </div>
 
         <div>

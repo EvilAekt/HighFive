@@ -6,22 +6,27 @@
 <!-- Hero Section -->
 <section class="relative min-h-[90vh] bg-black flex items-center justify-center overflow-hidden">
     <div class="absolute inset-0">
-        <img
-            src="https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg?auto=compress&cs=tinysrgb&w=1920"
-            alt="Hero"
-            class="w-full h-full object-cover opacity-60 scale-105 animate-[kenburns_20s_ease-in-out_infinite_alternate]"
-        />
+        <video 
+            autoplay loop muted playsinline 
+            class="w-full h-full object-cover opacity-60"
+            poster="https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg?auto=compress&cs=tinysrgb&w=1920"
+        >
+            <!-- Fashion related stock video -->
+            <source src="https://cdn.coverr.co/videos/coverr-fashion-model-posing-2693/1080p.mp4" type="video/mp4">
+            <!-- Fallback image if video fails -->
+            <img src="https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg?auto=compress&cs=tinysrgb&w=1920" alt="Hero" class="w-full h-full object-cover opacity-60">
+        </video>
     </div>
     <!-- Subtle gradient overlay for better text readability -->
     <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80"></div>
     
-    <div class="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+    <div class="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center pb-24 sm:pb-32">
         <p class="text-white/80 text-xs uppercase tracking-[0.3em] mb-6 font-medium animate-fade-up">
             {{ $brandProfile->tagline ?? 'Premium Fashion Brand — Jogja' }}
         </p>
         
         <!-- Huge, sleek typography -->
-        <h1 class="text-7xl md:text-9xl font-black text-white leading-[0.85] mb-8 uppercase tracking-tighter drop-shadow-2xl animate-fade-up" style="animation-delay: 100ms;">
+        <h1 class="text-6xl sm:text-7xl md:text-9xl font-black text-white leading-[0.85] mb-8 uppercase tracking-tighter drop-shadow-2xl animate-fade-up" style="animation-delay: 100ms;">
             HIGH<br />
             <span class="font-thin text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-500">FIVE</span>
         </h1>
@@ -30,19 +35,19 @@
             {{ $brandProfile->story ?? 'Koleksi fashion minimalis dan elegan untuk gaya hidup modern Anda. Kualitas premium tanpa kompromi.' }}
         </p>
         
-        <div class="flex flex-col sm:flex-row gap-6 animate-fade-up" style="animation-delay: 300ms;">
-            <a href="{{ route('catalog') }}" class="group relative inline-flex items-center justify-center px-10 py-4 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase overflow-hidden">
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-fade-up w-full max-w-[280px] sm:max-w-none" style="animation-delay: 300ms;">
+            <a href="{{ route('catalog') }}" class="group relative inline-flex items-center justify-center px-6 sm:px-10 py-3 sm:py-4 bg-white text-black text-xs font-bold tracking-[0.2em] uppercase overflow-hidden w-full sm:w-auto">
                 <span class="relative z-10 transition-colors duration-300 group-hover:text-white">Shop The Collection</span>
                 <div class="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
             </a>
-            <a href="{{ route('catalog', ['sort' => 'newest']) }}" class="inline-flex items-center justify-center px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white border border-white/30 hover:border-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+            <a href="{{ route('catalog', ['sort' => 'newest']) }}" class="inline-flex items-center justify-center px-6 sm:px-10 py-3 sm:py-4 text-xs font-bold uppercase tracking-[0.2em] text-white border border-white/30 hover:border-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm w-full sm:w-auto">
                 New Arrivals
             </a>
         </div>
     </div>
     
     <!-- Minimalist Scroll indicator -->
-    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-white/50 animate-bounce">
+    <div class="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 sm:gap-4 text-white/50 animate-bounce">
         <span class="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
         <div class="w-[1px] h-12 bg-gradient-to-b from-white/50 to-transparent"></div>
     </div>
@@ -66,7 +71,7 @@
 </section>
 
 <!-- Categories - Editorial Style -->
-<section class="py-12 md:py-16 bg-white dark:bg-gray-900 transition-colors">
+<section class="py-12 md:py-16 bg-white dark:bg-onyx-800 transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-10 md:mb-16">
             <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter text-black dark:text-white">
@@ -91,7 +96,7 @@
             
             @foreach($cats as $category)
                 <a href="{{ route('catalog', ['category' => $category->slug]) }}" class="group block relative">
-                    <div class="relative h-[450px] md:h-[600px] overflow-hidden mb-6 bg-gray-100 dark:bg-gray-800">
+                    <div class="relative h-[450px] md:h-[600px] overflow-hidden mb-6 bg-gray-100 dark:bg-onyx-700">
                         <img 
                             src="{{ $defaultImages[strtolower($category->name)] ?? 'https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg?auto=compress&cs=tinysrgb&w=800' }}" 
                             alt="{{ $category->name }}"
@@ -112,8 +117,73 @@
     </div>
 </section>
 
+<!-- Flash Sale - Urgent Elegance -->
+@if(isset($flashSaleProduct))
+<section class="py-12 md:py-16 bg-red-900 text-white relative overflow-hidden" x-data="countdownTimer(new Date('{{ $flashSaleProduct->flash_sale_end }}').getTime())">
+    <div class="absolute inset-0 opacity-10">
+        <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 20px);"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div>
+            <p class="text-[10px] uppercase tracking-[0.3em] mb-2 font-medium">Limited Time Offer</p>
+            <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">Flash Sale</h2>
+            <p class="text-white/80 font-light text-sm max-w-md">Dapatkan potongan harga eksklusif untuk koleksi terpilih kami. Waktu terus berjalan.</p>
+        </div>
+        
+        <!-- Timer -->
+        <div class="flex items-center gap-4 text-center">
+            <div class="flex flex-col items-center">
+                <span class="text-4xl md:text-5xl font-black font-mono tracking-tighter" x-text="hours">00</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Hours</span>
+            </div>
+            <span class="text-3xl font-black mb-4">:</span>
+            <div class="flex flex-col items-center">
+                <span class="text-4xl md:text-5xl font-black font-mono tracking-tighter" x-text="minutes">00</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Mins</span>
+            </div>
+            <span class="text-3xl font-black mb-4">:</span>
+            <div class="flex flex-col items-center">
+                <span class="text-4xl md:text-5xl font-black font-mono tracking-tighter" x-text="seconds">00</span>
+                <span class="text-[10px] uppercase tracking-widest mt-1">Secs</span>
+            </div>
+        </div>
+        
+        <a href="{{ route('product.show', $flashSaleProduct->id) }}" class="inline-flex items-center justify-center px-8 py-4 bg-white text-red-900 text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors">
+            Shop Flash Sale
+        </a>
+    </div>
+    
+    @push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('countdownTimer', (endTime) => ({
+                timeRemaining: 0,
+                timer: null,
+                init() {
+                    this.updateTime();
+                    this.timer = setInterval(() => this.updateTime(), 1000);
+                },
+                updateTime() {
+                    this.timeRemaining = Math.max(0, endTime - new Date().getTime());
+                },
+                get hours() {
+                    return String(Math.floor((this.timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+                },
+                get minutes() {
+                    return String(Math.floor((this.timeRemaining % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+                },
+                get seconds() {
+                    return String(Math.floor((this.timeRemaining % (1000 * 60)) / 1000)).padStart(2, '0');
+                }
+            }))
+        })
+    </script>
+    @endpush
+</section>
+@endif
+
 <!-- Featured Products - Museum Gallery Style -->
-<section class="py-12 md:py-16 bg-gray-50 dark:bg-gray-800/50 transition-colors">
+<section class="py-12 md:py-16 bg-gray-50 dark:bg-onyx-800/50 transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
             <div>
@@ -170,7 +240,7 @@
 </section>
 
 <!-- Newsletter - Minimalist Block -->
-<section class="py-12 md:py-16 bg-white dark:bg-gray-900 transition-colors">
+<section class="py-12 md:py-16 bg-white dark:bg-onyx-800 transition-colors">
     <div class="max-w-2xl mx-auto px-4 text-center">
         <h2 class="text-3xl font-black uppercase tracking-tighter mb-4 text-black dark:text-white">
             Join The Club
