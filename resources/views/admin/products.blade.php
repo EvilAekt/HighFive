@@ -39,7 +39,7 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-12 bg-primary-100 flex-shrink-0 overflow-hidden">
                                         @if($product->thumbnail)
-                                            <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" class="w-full h-full object-cover" />
+                                            <img src="{{ Str::startsWith($product->thumbnail, ['http://', 'https://', '/']) ? $product->thumbnail : asset($product->thumbnail) }}" alt="{{ $product->name }}" class="w-full h-full object-cover" />
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-primary-400 text-xs">
                                                 No image

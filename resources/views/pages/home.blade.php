@@ -71,9 +71,9 @@
                 (object)['name' => 'Outerwear', 'slug' => 'outerwear']
             ]);
             $defaultImages = [
-                'https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=800',
-                'https://images.pexels.com/photos/1598507/pexels-photo-1598507.jpeg?auto=compress&cs=tinysrgb&w=800',
-                'https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg?auto=compress&cs=tinysrgb&w=800'
+                asset('images/home_1.jpg'),
+                asset('images/home_3.jpg'),
+                asset('images/home_2.jpg')
             ];
         @endphp
 
@@ -105,7 +105,7 @@
                 @if($cats->count() > 2)
                     <!-- Medium Item 2 -->
                     <a href="{{ route('catalog', ['category' => $cats[2]->slug]) }}" class="group relative h-[45vh] md:h-[calc(40vh-2.5rem)] overflow-hidden bg-gray-100">
-                        <img src="{{ $defaultImages[2] }}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105">
+                        <img src="{{ $defaultImages[2] }}" class="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                         <div class="absolute bottom-6 left-6">
                             <h3 class="text-3xl font-black text-white uppercase tracking-tighter">{{ $cats[2]->name }}</h3>

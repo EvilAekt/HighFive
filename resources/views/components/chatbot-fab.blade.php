@@ -187,7 +187,7 @@ class="fixed bottom-6 right-6 z-[90] flex flex-col items-end pointer-events-none
                             <template x-if="msg.product">
                                 <div class="mt-2 bg-white dark:bg-onyx-800 rounded-lg overflow-hidden shadow-sm flex flex-col w-full min-w-[200px] border border-black/5 dark:border-white/5">
                                     <div class="w-full h-32 bg-gray-100 dark:bg-onyx-900 relative">
-                                        <img :src="msg.product.thumbnail ? (msg.product.thumbnail.startsWith('http') ? msg.product.thumbnail : (msg.product.thumbnail.startsWith('/') ? msg.product.thumbnail : '/' + msg.product.thumbnail)) : (msg.product.images && msg.product.images.length > 0 ? '/storage/' + msg.product.images[0].image_path : 'https://placehold.co/200')" 
+                                        <img :src="msg.product.thumbnail ? (msg.product.thumbnail.startsWith('http') || msg.product.thumbnail.startsWith('/') ? msg.product.thumbnail : '/storage/' + msg.product.thumbnail) : (msg.product.images && msg.product.images.length > 0 ? (msg.product.images[0].image_path.startsWith('http') || msg.product.images[0].image_path.startsWith('/') ? msg.product.images[0].image_path : '/storage/' + msg.product.images[0].image_path) : 'https://placehold.co/200')" 
                                              class="w-full h-full object-cover">
                                     </div>
                                     <div class="p-3 flex flex-col gap-1">

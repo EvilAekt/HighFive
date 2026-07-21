@@ -25,7 +25,7 @@ class ProductController extends Controller
             'weight' => 'required|integer|min:1',
             'existing_images' => 'nullable|array',
             'image_files' => 'nullable|array',
-            'image_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:15360',
             'variants' => 'required|array|min:1',
             'variants.*.size' => 'required|string',
             'variants.*.color' => 'required|string',
@@ -48,7 +48,7 @@ class ProductController extends Controller
         if ($request->hasFile('image_files')) {
             foreach ($request->file('image_files') as $file) {
                 $path = $file->store('products', 'public');
-                $imagePaths[] = 'storage/' . $path;
+                $imagePaths[] = '/storage/' . $path;
             }
         }
         
@@ -90,7 +90,7 @@ class ProductController extends Controller
             'weight' => 'required|integer|min:1',
             'existing_images' => 'nullable|array',
             'image_files' => 'nullable|array',
-            'image_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:15360',
             'variants' => 'required|array|min:1',
             'variants.*.size' => 'required|string',
             'variants.*.color' => 'required|string',
@@ -113,7 +113,7 @@ class ProductController extends Controller
         if ($request->hasFile('image_files')) {
             foreach ($request->file('image_files') as $file) {
                 $path = $file->store('products', 'public');
-                $imagePaths[] = 'storage/' . $path;
+                $imagePaths[] = '/storage/' . $path;
             }
         }
         
@@ -176,7 +176,11 @@ class ProductController extends Controller
 
     public function destroy($id)
     {
-        Product::findOrFail($id)->delete();
-        return back()->with('success', 'Produk berhasil dihapus');
+        try {
+            Product::findOrFail($id)->delete();
+            return back()->with('success', 'Produk berhasil dihapus');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', 'Produk tidak bisa dihapus karena memiliki riwayat pesanan (Order). Silakan ubah status produk menjadi "Inactive".');
+        }
     }
 }
