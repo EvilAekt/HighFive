@@ -1,103 +1,108 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150x150/000000/FFFFFF?text=HIGH+FIVE" alt="HIGH FIVE Logo" width="120" height="120">
-  
-  # ✋ HIGH FIVE - Modern E-Commerce
-  
-  **An advanced, AI-powered e-commerce platform built with Laravel.**
-  
-  <p>
-    <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel">
-    <img src="https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white" alt="AlpineJS">
-    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS">
-    <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini AI">
-  </p>
+
+<img src="https://via.placeholder.com/1000x300/000000/FFFFFF?text=HIGH+FIVE+OFFICIAL" alt="HIGH FIVE Banner" width="100%">
+
+# ⚡ HIGH FIVE ⚡
+**The Future of Fashion Commerce is Here.**
+
+[![Laravel](https://img.shields.io/badge/Laravel-Black?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![Alpine](https://img.shields.io/badge/Alpine.js-Black?style=for-the-badge&logo=alpine.js)](https://alpinejs.dev)
+[![Tailwind](https://img.shields.io/badge/Tailwind-Black?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+[![Gemini](https://img.shields.io/badge/Powered_by_Gemini-Black?style=for-the-badge&logo=google)](https://ai.google.dev/)
+
+*More than just clothes. It's a statement.*
+
 </div>
 
 ---
 
-## ✨ Overview
+> **HIGH FIVE** redefines the online shopping experience. We built a cutting-edge, stylish e-commerce platform integrated seamlessly with a next-generation AI assistant. Shopping for streetwear shouldn't just be a transaction; it should be an experience.
 
-**HIGH FIVE** is a fully functional, highly interactive e-commerce platform designed for clothing retail. It focuses on delivering a premium user experience with modern aesthetics and cutting-edge features. 
+## 🔥 The Vibe (Key Features)
 
-The highlight of the platform is its **AI-Powered Customer Service**, which acts as a 24/7 intelligent sales assistant capable of answering product queries, checking stock availability, and recommending products interactively.
+### 🧠 Gemini-Powered Sales Assistant
+Forget boring chatbots. Our AI acts like your personal fashion stylist right on the website.
+- **Smart Visual Recommendations:** Ask the bot what's trending, and it won't just tell you—it'll show you. The AI drops slick **Product Cards** right in the chat.
+- **Context-Aware:** It knows our inventory, prices, and release dates. Ask about sizes or colors, and it checks the database in real-time.
+- **Zero Bullsh*t:** Strict AI prompt-engineering ensures the bot stays on brand. It ignores spam and focuses entirely on fashion.
 
-## 🚀 Key Features
+### 🛍️ The Storefront
+- **Sleek Catalog:** Fast, dynamic, and visually stunning storefront built with Tailwind CSS.
+- **Flawless Cart Experience:** From adding to cart to checking out, every interaction is butter-smooth (powered by Alpine.js).
+- **Hype Drops:** Built-in countdowns for exclusive flash sales and limited releases.
 
-### 🤖 Intelligent AI Chatbot (Gemini Integration)
-- **Context-Aware Responses:** The bot understands the store's inventory, prices, and release dates, providing highly accurate answers.
-- **Smart Recommendations:** When users ask for recommendations, the AI automatically picks the best-selling or newest products and renders them as beautiful UI **Product Cards** right inside the chat.
-- **Out-of-Context Protection:** Strict prompt engineering ensures the AI stays on topic and politely ignores unrelated questions.
-- **Unified Sessions:** Users' cross-device chat histories are flawlessly unified under a single account session.
-
-### 🛍️ Storefront & E-Commerce
-- **Dynamic Catalog:** Browse products with specific color and size variants.
-- **Cart & Checkout:** Seamless shopping cart experience and order management.
-- **Flash Sales:** Built-in support for time-limited flash sale campaigns.
-
-### 👨‍💻 Admin & Owner Dashboards
-- **Live Chat Dashboard:** Monitor and reply to customer inquiries in real-time. Admins can seamlessly take over the conversation from the AI.
-- **Toggle AI/Bot Rules:** Easily switch between the advanced Gemini AI, a basic rule-based bot, or fully manual human mode.
-- **Inventory Management:** Full control over product listings, variants, stock, and categories.
-
-## 🛠️ Technology Stack
-
-- **Backend:** Laravel 11.x (PHP 8.2+)
-- **Frontend:** Blade Templates, Tailwind CSS (for styling), Alpine.js (for reactivity)
-- **AI Engine:** Google Gemini Pro API (`gemma-4-26b-a4b-it`)
-- **Database:** MySQL / PostgreSQL
-
-## 📦 Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/highfive.git
-   cd highfive/laravel
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   composer install
-   npm install && npm run build
-   ```
-
-3. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-
-4. **Configure Database & AI Credentials**
-   Open `.env` and set your database connection, as well as your Google Gemini API key:
-   ```env
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=highfive_db
-   DB_USERNAME=root
-   DB_PASSWORD=
-
-   GEMINI_API_KEY="your_google_gemini_api_key_here"
-   ```
-
-5. **Run Migrations & Seeders**
-   ```bash
-   php artisan migrate --seed
-   ```
-
-6. **Start the Application**
-   ```bash
-   php artisan serve
-   ```
-
-## 📸 Screenshots
-
-*(Add screenshots of your application here! Consider adding screenshots of the AI Chatbot recommending a product, the storefront, and the Live Chat Admin Dashboard).*
-
-## 📄 License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 🕶️ Control Room (Admin Dashboard)
+- **Live Takeover:** Watch customer chats in real-time. If the AI needs help, human admins can jump in instantly.
+- **Toggle The Matrix:** Switch between our ultra-smart Gemini AI, a standard Rule-based Bot, or pure Manual Mode with a single click.
 
 ---
+
+## 🏗️ Under the Hood
+
+### System Architecture
+```mermaid
+graph LR
+    User([Customer]) -->|Types Message| Frontend(Chat UI)
+    Frontend -->|POST| Backend{Engine}
+    
+    Backend -->|Gemini Active| AI[Google Gemini API]
+    AI -->|Returns JSON| Parser[Data Extractor]
+    Parser -->|Contains Product ID| UI1[Render Product Card]
+    Parser -->|Text Only| UI2[Render Chat Bubble]
+    
+    Backend -->|Rule Bot Active| Rules[Keyword Matcher]
+    Rules -->|Matched| UI2
+```
+
+### The Database Structure
+| Core Models | What it handles |
+| :--- | :--- |
+| `User` | Customer profiles and Admin access levels. |
+| `Product` | The threads. Names, prices, descriptions, and hype status. |
+| `ProductVariant` | The specifics. Colors, sizes, and real-time stock levels. |
+| `Message` | Unified cross-device chat histories linking customers to admins (and AI). |
+| `Order` | Purchase history and checkout statuses. |
+
+---
+
+## 🚀 Get It Running
+
+Want to spin up the local environment? Follow these steps:
+
+**1. Clone the Source**
+```bash
+git clone https://github.com/yourusername/highfive.git
+cd highfive/laravel
+```
+
+**2. Install the Dependencies**
+```bash
+composer install
+npm install && npm run build
+```
+
+**3. Configure the Environment**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+*Open `.env` and plug in your database credentials and your **Google Gemini API Key**.*
+
+**4. Build the Database**
+```bash
+php artisan migrate --seed
+php artisan storage:link
+```
+
+**5. Launch**
+```bash
+php artisan serve
+```
+*Drop into `http://localhost:8000` and experience it yourself.*
+
+---
+
 <div align="center">
-  <i>Built with ❤️ for HIGH FIVE.</i>
+  <p><strong>Stay hype. Stay stylish.</strong></p>
+  <p>Built with passion by the <strong>HIGH FIVE Team</strong>.</p>
 </div>
