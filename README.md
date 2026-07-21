@@ -5,10 +5,10 @@
 # ⚡ HIGH FIVE ⚡
 **Masa Depan Fashion Commerce Ada di Sini.**
 
-[![Laravel](https://img.shields.io/badge/Laravel-Black?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-11-Black?style=for-the-badge&logo=laravel)](https://laravel.com)
 [![Alpine](https://img.shields.io/badge/Alpine.js-Black?style=for-the-badge&logo=alpine.js)](https://alpinejs.dev)
-[![Tailwind](https://img.shields.io/badge/Tailwind-Black?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
-[![Gemini](https://img.shields.io/badge/Powered_by_Gemini-Black?style=for-the-badge&logo=google)](https://ai.google.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-CSS-Black?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+[![Gemini](https://img.shields.io/badge/Powered_by-Gemini_AI-Black?style=for-the-badge&logo=google)](https://ai.google.dev/)
 
 *Bukan sekadar pakaian. Ini tentang gaya hidup.*
 
@@ -24,7 +24,7 @@
 Lupakan *chatbot* kaku yang membosankan. AI kami bertindak layaknya *fashion stylist* pribadimu langsung di dalam *website*.
 - **Rekomendasi Visual Pintar:** Tanya apa yang sedang tren, dan bot ini tidak hanya menjawab dengan teks—tapi langsung menampilkan **Kartu Produk** interaktif di dalam *chat*.
 - **Paham Konteks:** AI ini hafal luar dalam soal inventaris, harga, dan rilis terbaru kita. Tanya soal warna atau ukuran, dan dia akan mengecek *database* secara *real-time*.
-- **Anti Spam:** Berkat instruksi khusus (*prompt-engineering* ketat), bot ini tidak akan melenceng dari topik *brand* kita. Ngomongin hal di luar pakaian? Bot akan diam.
+- **Unified Cross-Device Session:** Logika pintar kami menggabungkan obrolan pelanggan (meski berpindah dari HP ke Laptop) ke dalam satu riwayat utuh jika mereka sudah *login*.
 
 ### 🛍️ The Storefront (Etalase Belanja)
 - **Katalog Eksklusif:** Halaman belanja yang sangat cepat, dinamis, dan memanjakan mata, dibangun dengan estetika Tailwind CSS.
@@ -33,22 +33,25 @@ Lupakan *chatbot* kaku yang membosankan. AI kami bertindak layaknya *fashion sty
 
 ### 🕶️ Control Room (Dashboard Admin)
 - **Live Takeover:** Pantau obrolan pelanggan secara *real-time*. Kalau AI butuh bantuan, admin manusia bisa langsung mengambil alih obrolan kapan saja.
-- **Satu Tombol Sakti:** Ganti mode operasional *website* sesuka hati—dari Gemini AI yang super cerdas, kembali ke *Rule-Based Bot* biasa, atau masuk ke mode Manual sepenuhnya. Semuanya cuma butuh satu klik.
+- **Satu Tombol Sakti:** Ganti mode operasional *website* sesuka hati—dari Gemini AI yang super cerdas, kembali ke *Rule-Based Bot* biasa, atau masuk ke mode Manual sepenuhnya. Semuanya cuma butuh satu klik dan langsung tersimpan di *Cache*.
 
 ---
 
 ## 🏗️ Under the Hood (Di Balik Layar)
 
-### Arsitektur Sistem
+Sistem kami dibangun di atas arsitektur *backend* yang solid dan terstruktur rapi.
+
+### Arsitektur AI Chatbot Pipeline
 ```mermaid
 graph LR
     User([Pelanggan]) -->|Ketik Pesan| Frontend(Chat UI)
-    Frontend -->|POST| Backend{Engine}
+    Frontend -->|POST Request| Backend{Engine Controller}
     
-    Backend -->|Gemini Aktif| AI[Google Gemini API]
+    Backend -->|Gemini Aktif| AI[Inject Data Stok + Prompt ke Google API]
     AI -->|Output JSON| Parser[Data Extractor]
-    Parser -->|Ada ID Produk| UI1[Tampilkan Kartu Produk]
+    Parser -->|Ada ID Produk| UI1[Tampilkan Kartu Produk Visual]
     Parser -->|Teks Saja| UI2[Tampilkan Chat Biasa]
+    Parser -->|Luar Konteks| Mute[Abaikan (Anti-Spam)]
     
     Backend -->|Rule Bot Aktif| Rules[Keyword Matcher]
     Rules -->|Sesuai Keyword| UI2
@@ -57,17 +60,57 @@ graph LR
 ### Struktur Database Utama
 | Tabel Model | Fungsi & Peran |
 | :--- | :--- |
-| `User` | Mengatur profil pelanggan dan hak akses Admin. |
-| `Product` | Katalog utama. Menyimpan nama koleksi, harga, deskripsi, dan status hype/diskon. |
-| `ProductVariant` | Detail spesifik produk. Mengatur ketersediaan warna, ukuran, dan stok secara *real-time*. |
-| `Message` | Menyimpan seluruh riwayat *Live Chat* lintas-*device* antara pelanggan, AI, dan Admin. |
-| `Order` | Rekam jejak pembelian dan status *checkout* pelanggan. |
+| `User` | Mengatur otentikasi profil pelanggan dan hak akses privilese Admin. |
+| `Product` | Katalog utama. Menyimpan nama koleksi, harga, deskripsi, thumbnail, dan *status hype/flash sale*. |
+| `ProductVariant` | Detail spesifik produk. Mengatur ketersediaan warna, ukuran, dan melacak manajemen stok (*inventory*). |
+| `Message` | Menyimpan seluruh riwayat *Live Chat*. Menggunakan arsitektur `reply_to_id` untuk menghubungkan *thread* percakapan. |
+| `Order` & `OrderItem` | Rekam jejak transaksi pengguna, alamat pengiriman, dan rincian keranjang belanja yang telah di-*checkout*. |
+
+### 🎮 Arsitektur Controller (Dokumentasi Pengembang)
+
+<details>
+<summary><strong>1. ChatController (Front-Facing API)</strong></summary>
+
+Lokasi: `app/Http/Controllers/ChatController.php`
+- **Tugas Utama:** Mengelola penerimaan pesan pelanggan dari *Frontend* (Alpine.js).
+- **Integrasi AI:** Menarik data produk `is_active` dan jumlah *sold items* dari database, mem- *parsing* nya menjadi teks, lalu merangkainya ke dalam **Prompt Engineering** rahasia yang dikirim ke Google Gemini. 
+- **Response Parsing:** Menerjemahkan respons JSON AI menjadi data yang bisa dirender menjadi *Product Card* (Kartu Produk) di UI klien.
+</details>
+
+<details>
+<summary><strong>2. Admin\ChatController (Control Room)</strong></summary>
+
+Lokasi: `app/Http/Controllers/Admin/ChatController.php`
+- **Manajemen Sesi:** Secara cerdas melakukan *Group By Session* untuk menampilkan daftar pelanggan yang sedang *online*. Menarik nama pengguna (*User Name*) secara akurat meski pesan terakhir dikirimkan oleh sistem AI.
+- **Toggle Cache Engine:** Memodifikasi status `ai_active` dan `bot_active` secara *global* menggunakan Redis/File Cache tanpa perlu melakukan perpindahan halaman (*reload*).
+</details>
+
+<details>
+<summary><strong>3. CheckoutController & ProductController</strong></summary>
+
+- Mengelola validasi keranjang belanja, memastikan ketersediaan stok fisik `ProductVariant` sebelum memproses pesanan, serta mengembalikan data *catalog* secara dinamis ke halaman *storefront*.
+</details>
 
 ---
 
-## 🚀 Cara Menjalankan (Instalasi)
+## 🛡️ Keamanan & Validasi (Security)
 
-Ingin menjalankan sistem ini di komputermu? Ikuti langkah mudah berikut:
+Kami tidak mengorbankan keamanan demi estetika. Platform ini dilengkapi dengan pengamanan setingkat standar industri:
+
+1. **Anti-Prompt Injection (AI Security):**
+   Model Gemini dibatasi oleh *Prompt Engineering* yang sangat ketat (instruksi berlapis). AI diwajibkan untuk **membisu (mengembalikan string kosong)** jika pelanggan mencoba membahas hal di luar pakaian, komplain di luar nalar, atau mencoba memanipulasi bot.
+2. **CSRF Protection:**
+   Setiap pertukaran data (termasuk *fetch request* dari *Live Chat*) diproteksi penuh dengan token `@csrf` bawaan Laravel untuk mencegah serangan *Cross-Site Request Forgery*.
+3. **Data Sanitization & XSS Prevention:**
+   Semua input pengguna (seperti pesan obrolan) dibatasi panjang karakternya (maksimal 1000 karakter via `$request->validate()`) dan di-*escape* secara otomatis oleh *Blade engine* untuk mencegah serangan skrip silang (*Cross-Site Scripting*).
+4. **Role-Based Authorization:**
+   Seluruh area *Control Room* / *Dashboard* dilindungi oleh *middleware* khusus sehingga hanya akun dengan hak akses `admin` yang bisa mengubah pengaturan AI atau membaca pesan masuk pelanggan.
+
+---
+
+## 🚀 Cara Menjalankan (Instalasi Lokal)
+
+Ingin me-*running* sistem keren ini di komputermu? Ikuti langkah berikut:
 
 **1. Clone Source Code**
 ```bash
@@ -86,7 +129,7 @@ npm install && npm run build
 cp .env.example .env
 php artisan key:generate
 ```
-*Buka file `.env` dan masukkan kredensial database-mu, serta jangan lupa masukkan **API Key Google Gemini**.*
+*Buka file `.env` dan atur koneksi `DB_` kamu. Sangat Penting: Masukkan **API Key Google Gemini** kamu di variabel `GEMINI_API_KEY=`.*
 
 **4. Bangun Database**
 ```bash
@@ -103,6 +146,6 @@ php artisan serve
 ---
 
 <div align="center">
-  <p><strong>Stay hype. Stay stylish.</strong></p>
+  <p><strong>Stay hype. Stay stylish. Stay secure.</strong></p>
   <p>Dibuat dengan semangat penuh oleh <strong>Tim HIGH FIVE</strong>.</p>
 </div>
