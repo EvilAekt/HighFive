@@ -57,6 +57,39 @@ graph LR
     Rules -->|Sesuai Keyword| UI2
 ```
 
+### Alur Checkout & Validasi Stok
+```mermaid
+graph TD
+    Cart([Keranjang Belanja]) -->|Klik Checkout| Auth{Cek Login}
+    Auth -->|Belum Login| Login[Halaman Login]
+    Auth -->|Sudah Login| StockCheck{Cek Ketersediaan Stok}
+    
+    StockCheck -->|Stok Habis| Error[Tampilkan Error di Keranjang]
+    StockCheck -->|Stok Tersedia| Lock[Kunci Stok Sementara]
+    
+    Lock --> Payment[Proses Pembayaran]
+    Payment -->|Berhasil| CreateOrder[Buat Pesanan & Kurangi Stok Permanen]
+    Payment -->|Gagal/Batal| Release[Lepas Kunci Stok]
+    
+    CreateOrder --> Success([Halaman Sukses])
+```
+
+### Sistem Manajemen Inventaris (Admin)
+```mermaid
+graph LR
+    Admin([Admin]) -->|Input Form| Dashboard[Control Room]
+    Dashboard -->|Unggah Foto| Upload[Validasi Ukuran & Tipe File]
+    Upload -->|Sukses| SaveDB[Simpan ke Database]
+    
+    Dashboard -->|Set Status| Toggle{Produk Aktif?}
+    Toggle -->|Ya| Storefront[Tampil di Halaman Depan]
+    Toggle -->|Tidak| Hidden[Disembunyikan dari Pembeli]
+    
+    Dashboard -->|Hapus Produk| DeleteCheck{Ada Riwayat Pesanan?}
+    DeleteCheck -->|Ya| Reject[Tolak Hapus, Sarankan Inactive]
+    DeleteCheck -->|Tidak| Delete[Hapus Permanen]
+```
+
 ### Struktur Database Utama
 | Tabel Model | Fungsi & Peran |
 | :--- | :--- |
