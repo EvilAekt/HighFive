@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://via.placeholder.com/1000x300/000000/FFFFFF?text=HIGH+FIVE+OFFICIAL" alt="HIGH FIVE Banner" width="100%">
+<img src="https://placehold.co/1000x300/000000/FFFFFF.png?text=HIGH+FIVE+OFFICIAL" alt="HIGH FIVE Banner" width="100%">
 
 # ⚡ HIGH FIVE ⚡
 **Masa Depan Fashion Commerce Ada di Sini.**
@@ -51,7 +51,7 @@ graph LR
     AI -->|Output JSON| Parser[Data Extractor]
     Parser -->|Ada ID Produk| UI1[Tampilkan Kartu Produk Visual]
     Parser -->|Teks Saja| UI2[Tampilkan Chat Biasa]
-    Parser -->|Luar Konteks| Mute[Abaikan (Anti-Spam)]
+    Parser -->|Luar Konteks| Mute["Abaikan (Anti-Spam)"]
     
     Backend -->|Rule Bot Aktif| Rules[Keyword Matcher]
     Rules -->|Sesuai Keyword| UI2
