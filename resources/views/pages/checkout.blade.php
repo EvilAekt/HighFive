@@ -2,28 +2,39 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="checkoutData()">
-    <h1 class="text-3xl font-black uppercase tracking-tight text-primary-900 mb-8">Checkout</h1>
-
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+        <h1 class="text-3xl font-black uppercase tracking-tight text-primary-900 dark:text-white">Checkout</h1>
+        <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors group">
+            <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
+            Kembali ke Keranjang
+        </a>
+    </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
-            <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" class="bg-white border border-primary-200 p-6 sm:p-8">
+            <form id="checkout-form" action="{{ route('checkout.store') }}" method="POST" class="bg-white dark:bg-onyx-900 border-4 border-black dark:border-white p-6 sm:p-8 shadow-[8px_8px_0_0_#000] dark:shadow-[8px_8px_0_0_#fff] mb-8 lg:mb-0 transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#000] dark:hover:shadow-[12px_12px_0_0_#fff]">
                 @csrf
                 
-                <h2 class="text-lg font-bold uppercase tracking-widest mb-6 border-b border-primary-200 pb-4">Informasi Pengiriman</h2>
+                <h2 class="text-xl sm:text-2xl font-black uppercase tracking-widest mb-6 border-b-4 border-black dark:border-white pb-4 text-black dark:text-white">Informasi Pengiriman</h2>
                 
                 <div class="space-y-6">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2">
-                            Nama Lengkap
+                            Nama Lengkap *
                         </label>
-                        <input type="text" value="{{ auth()->user()->name }}" class="input-field bg-primary-50" readonly />
+                        <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" class="input-field @error('name') border-red-500 @enderror bg-white" required />
+                        @error('name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2">
-                            Email
+                            Email *
                         </label>
-                        <input type="email" value="{{ auth()->user()->email }}" class="input-field bg-primary-50" readonly />
+                        <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" class="input-field @error('email') border-red-500 @enderror bg-white" required />
+                        @error('email')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -70,7 +81,7 @@
                         </div>
                     </div>
 
-                <h2 class="text-lg font-bold uppercase tracking-widest mb-6 mt-10 border-b border-primary-200 pb-4">Opsi Pengiriman</h2>
+                <h2 class="text-xl sm:text-2xl font-black uppercase tracking-widest mb-6 mt-12 border-b-4 border-black dark:border-white pb-4 text-black dark:text-white">Opsi Pengiriman</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-widest text-primary-500 mb-2">Kurir Pengiriman *</label>
@@ -95,14 +106,19 @@
         </div>
 
         <div class="lg:col-span-5 mt-8 lg:mt-0">
-            <div class="bg-primary-50 border border-primary-200 p-6 sticky top-24">
-                <h2 class="text-lg font-bold uppercase tracking-widest mb-6 border-b border-primary-200 pb-4">Pesanan Anda</h2>
+            <div class="bg-white dark:bg-onyx-900 border-4 border-black dark:border-white p-6 sm:p-8 sticky top-24 shadow-[8px_8px_0_0_#000] dark:shadow-[8px_8px_0_0_#fff] transition-all hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#000] dark:hover:shadow-[12px_12px_0_0_#fff]">
+                <div class="flex items-center justify-between mb-6 border-b-4 border-black dark:border-white pb-4">
+                    <h2 class="text-xl sm:text-2xl font-black uppercase tracking-widest text-black dark:text-white">Pesanan Anda</h2>
+                    <a href="{{ route('cart.index') }}" class="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white underline decoration-2 underline-offset-4">
+                        Edit
+                    </a>
+                </div>
                 
                 <div class="space-y-4 mb-6 max-h-64 overflow-y-auto pr-2">
                     @foreach($carts as $cart)
-                        <div class="flex gap-4">
-                            <div class="w-16 h-20 bg-primary-100 flex-shrink-0">
-                                <img src="{{ $cart->variant->product->thumbnail }}" alt="{{ $cart->variant->product->name }}" class="w-full h-full object-cover" />
+                        <div class="flex gap-4 p-3 border-2 border-transparent hover:border-black dark:hover:border-white transition-colors bg-gray-50 dark:bg-onyx-800">
+                            <div class="w-16 h-20 bg-gray-200 dark:bg-onyx-700 flex-shrink-0 border border-black dark:border-white">
+                                <img src="{{ $cart->variant->product->thumbnail }}" alt="{{ $cart->variant->product->name }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" />
                             </div>
                             <div class="flex-1">
                                 <p class="font-medium text-sm line-clamp-1">{{ $cart->variant->product->name }}</p>
@@ -118,8 +134,8 @@
                     @endforeach
                 </div>
                 
-                <div class="space-y-3 text-sm mb-6 border-t border-primary-200 pt-4">
-                    <div class="flex justify-between">
+                <div class="space-y-3 text-sm mb-6 border-t-4 border-black dark:border-white pt-6 mt-6">
+                    <div class="flex justify-between font-bold">
                         <span class="text-primary-600">Subtotal</span>
                         <span class="font-medium" x-text="formatPrice(subtotal)"></span>
                     </div>
@@ -129,15 +145,15 @@
                             <span class="text-green-600">-<span x-text="formatPrice(discount)"></span></span>
                         </div>
                     @endif
-                    <div class="flex justify-between text-primary-600">
-                        <span>Biaya Pengiriman <span x-show="isLoadingCost" class="text-xs animate-pulse text-primary-500">(Menghitung...)</span></span>
+                    <div class="flex justify-between font-bold text-gray-600 dark:text-gray-400">
+                        <span>Biaya Pengiriman <span x-show="isLoadingCost" class="text-[10px] animate-pulse text-black dark:text-white bg-yellow-300 dark:bg-yellow-600 px-1 ml-1">(Menghitung...)</span></span>
                         <span x-text="currentShippingCost == 0 ? 'Gratis' : formatPrice(currentShippingCost)"></span>
                     </div>
                 </div>
 
                 <!-- Coupon Section -->
-                <div class="border-t border-primary-200 pt-4 pb-4">
-                    <label class="block text-sm font-medium text-primary-700 mb-2 uppercase tracking-wider text-xs">Punya Kode Promo?</label>
+                <div class="border-t-4 border-black dark:border-white pt-6 pb-6">
+                    <label class="block text-sm font-black text-black dark:text-white mb-3 uppercase tracking-wider">Punya Kode Promo?</label>
                     <form action="{{ route('checkout.coupon') }}" method="POST" class="flex gap-2">
                         @csrf
                         <input type="text" name="coupon_code" value="{{ $appliedCoupon ?? '' }}" placeholder="Masukkan kode..." class="flex-1 px-3 py-2 border border-primary-300 focus:border-black outline-none transition-colors uppercase" {{ $appliedCoupon ? 'readonly' : '' }}>
@@ -150,10 +166,10 @@
                     @endif
                 </div>
 
-                <div class="border-t border-primary-200 pt-4 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold uppercase tracking-widest text-primary-900">Total</span>
-                        <span class="text-xl font-bold text-primary-900" x-text="formatPrice(total)"></span>
+                <div class="border-t-4 border-black dark:border-white pt-6 space-y-2">
+                    <div class="flex justify-between items-center bg-black text-white dark:bg-white dark:text-black p-4 shadow-[4px_4px_0_0_#e5e7eb] dark:shadow-[4px_4px_0_0_#374151]">
+                        <span class="font-black uppercase tracking-widest">Total</span>
+                        <span class="text-2xl font-black" x-text="formatPrice(total)"></span>
                     </div>
                 </div>
                 

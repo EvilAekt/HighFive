@@ -27,7 +27,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:pengunjung,admin',
+            'role' => 'required|in:user,admin,owner',
         ]);
 
         User::create([
@@ -39,5 +39,16 @@ class UserController extends Controller
         ]);
 
         return back()->with('success', 'Pengguna berhasil ditambahkan.');
+    }
+
+    public function updateRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|in:user,admin,owner',
+        ]);
+
+        $user->update(['role' => $request->role]);
+
+        return back()->with('success', "Role {$user->name} berhasil diubah menjadi {$request->role}.");
     }
 }

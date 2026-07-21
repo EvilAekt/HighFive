@@ -12,6 +12,8 @@ class Message extends Model
         'is_admin',
         'content',
         'is_read',
+        'reply_to_id',
+        'product_id',
     ];
 
     protected $casts = [
@@ -22,5 +24,15 @@ class Message extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replyTo()
+    {
+        return $this->belongsTo(Message::class, 'reply_to_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

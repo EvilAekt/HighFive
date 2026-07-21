@@ -32,22 +32,45 @@ class DashboardController extends Controller
             ->get();
 
 
-        // Sales for the last 4 months
-        $fourMonthsAgo = now()->subMonths(4);
-        $sales4Months = \Illuminate\Support\Facades\DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
-            ->join('products', 'products.id', '=', 'product_variants.product_id')
-            ->whereIn('orders.status', ['processing', 'shipped', 'delivered'])
-            ->where('orders.created_at', '>=', $fourMonthsAgo)
-            ->select('products.name', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as total_sold'))
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('total_sold')
+        // Low Stock Products (variants with stock < 5)
+        $lowStockProducts = \App\Models\ProductVariant::with('product')
+            ->where('stock', '<', 5)
             ->get();
+
+        // Recent Reviews
+        $recentReviews = \App\Models\Review::with(['user', 'product'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Pending / Processing Orders
+        $pendingOrders = Order::with('user')
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // 7-day Sales Chart
+        $last7Days = collect();
+        $sales7DaysData = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $last7Days->push(now()->subDays($i)->format('d M'));
+            
+            $dailySalesPayment = \App\Models\Payment::whereDate('created_at', $date)
+                ->where('status', 'paid')
+                ->sum('amount');
+                
+            $sales7DaysData->push($dailySalesPayment);
+        }
+
+        $botActive = \Illuminate\Support\Facades\Cache::get('bot_active', true);
+        $aiActive = \Illuminate\Support\Facades\Cache::get('ai_active', true);
 
         return view('admin.dashboard', compact(
             'totalRevenue', 'totalOrders', 'totalProducts', 'totalCustomers', 
-            'ordersByStatus', 'recentOrders', 'topProducts', 'sales4Months'
+            'ordersByStatus', 'recentOrders', 'topProducts',
+            'lowStockProducts', 'recentReviews', 'pendingOrders', 'last7Days', 'sales7DaysData', 'botActive', 'aiActive'
         ));
     }
 }

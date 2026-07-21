@@ -6,9 +6,11 @@ use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderShipped extends Mailable
 {
@@ -44,13 +46,13 @@ class OrderShipped extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
-        return [];
+        $pdf = Pdf::loadView('pdf.invoice', ['order' => $this->order]);
+        
+        return [
+            Attachment::fromData(fn () => $pdf->output(), 'Invoice-' . $this->order->order_code . '.pdf')
+                ->withMime('application/pdf'),
+        ];
     }
 }

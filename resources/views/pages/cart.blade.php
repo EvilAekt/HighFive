@@ -13,7 +13,11 @@
             </a>
         </div>
     @else
-        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+        <div id="cart-container" class="lg:grid lg:grid-cols-12 lg:gap-8 relative" x-data="cartManager()">
+            <!-- Loading Overlay -->
+            <div x-show="isLoading" class="absolute inset-0 z-50 bg-white/40 backdrop-blur-[2px] flex items-center justify-center transition-opacity" style="display: none;">
+                <svg class="animate-spin h-10 w-10 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
             <div class="lg:col-span-8">
                 <div class="bg-white border border-primary-200">
                     <ul class="divide-y divide-primary-100">
@@ -38,15 +42,15 @@
                                     </div>
                                     
                                     <div class="mt-auto pt-4 flex items-center justify-between">
-                                        <form action="{{ route('cart.update', $cart->id) }}" method="POST" class="flex border border-primary-300">
+                                        <form action="{{ route('cart.update', $cart->id) }}" method="POST" class="flex border border-primary-300" @submit.prevent="updateCart($el)">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="button" onclick="var el=this.nextElementSibling; if(el.value > 1) { el.value--; this.form.submit(); }" class="px-3 py-1 text-primary-600 hover:bg-primary-100">-</button>
-                                            <input type="number" name="quantity" value="{{ $cart->quantity }}" min="1" max="{{ $cart->variant->stock }}" class="w-12 text-center py-1 appearance-none outline-none text-sm font-medium border-x border-primary-300 text-black" onchange="this.form.submit()">
-                                            <button type="button" onclick="var el=this.previousElementSibling; if(el.value < {{ $cart->variant->stock }}) { el.value++; this.form.submit(); }" class="px-3 py-1 text-primary-600 hover:bg-primary-100">+</button>
+                                            <button type="button" @click="let input = $el.nextElementSibling; if(input.value > 1) { input.value--; updateCart($el.closest('form')); }" class="px-3 py-1 text-primary-600 hover:bg-primary-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-transparent" {{ $cart->quantity <= 1 ? 'disabled' : '' }}>-</button>
+                                            <input type="number" name="quantity" value="{{ $cart->quantity }}" min="1" max="{{ $cart->variant->stock }}" class="w-12 text-center py-1 appearance-none outline-none text-sm font-medium border-x border-primary-300 text-black" @change="updateCart($el.closest('form'))">
+                                            <button type="button" @click="let input = $el.previousElementSibling; if(input.value < {{ $cart->variant->stock }}) { input.value++; updateCart($el.closest('form')); }" class="px-3 py-1 text-primary-600 hover:bg-primary-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-transparent" {{ $cart->quantity >= $cart->variant->stock ? 'disabled' : '' }}>+</button>
                                         </form>
                                         
-                                        <form action="{{ route('cart.remove', $cart->id) }}" method="POST">
+                                        <form action="{{ route('cart.remove', $cart->id) }}" method="POST" @submit.prevent="updateCart($el)">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-sm text-primary-500 hover:text-red-600 flex items-center gap-1 uppercase tracking-widest font-semibold">
@@ -117,3 +121,38 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('cartManager', () => ({
+            isLoading: false,
+            updateCart(formElement) {
+                if(this.isLoading) return;
+                this.isLoading = true;
+                
+                fetch(formElement.action, {
+                    method: formElement.method,
+                    body: new FormData(formElement),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const newContainer = doc.getElementById('cart-container');
+                    if (newContainer) {
+                        document.getElementById('cart-container').innerHTML = newContainer.innerHTML;
+                        if(typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(() => window.location.reload())
+                .finally(() => this.isLoading = false);
+            }
+        }));
+    });
+</script>
+@endpush

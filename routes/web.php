@@ -29,6 +29,8 @@ Route::post('/midtrans/callback', [MidtransController::class, 'callback']);
 // Chat API (Public for guests too)
 Route::get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
 Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'store'])->name('chat.store');
+Route::delete('/chat/messages/{id}', [\App\Http\Controllers\ChatController::class, 'destroy'])->name('chat.destroy');
+Route::post('/chat/messages/{id}/report', [\App\Http\Controllers\ChatController::class, 'report'])->name('chat.report');
 
 // Socialite Routes
 Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialiteController::class, 'redirect'])->name('socialite.redirect');
@@ -86,8 +88,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Chat
     Route::get('/chat', [\App\Http\Controllers\Admin\ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/toggle/{type}', [\App\Http\Controllers\Admin\ChatController::class, 'toggleBot'])->name('chat.toggle');
     Route::get('/chat/{sessionId}', [\App\Http\Controllers\Admin\ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/chat/{sessionId}/reply', [\App\Http\Controllers\Admin\ChatController::class, 'reply'])->name('chat.reply');
+    Route::delete('/chat/messages/{id}', [\App\Http\Controllers\Admin\ChatController::class, 'destroy'])->name('chat.destroy');
 
     Route::resource('products', AdminProductController::class)->except(['create', 'edit', 'show']);
     
@@ -103,6 +107,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
+    Route::post('/users/{user}/ban', [UserController::class, 'ban'])->name('users.ban');
+
+    // Withdrawals
+    Route::get('/withdrawals', [\App\Http\Controllers\Admin\WithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::patch('/withdrawals/{withdrawal}', [\App\Http\Controllers\Admin\WithdrawalController::class, 'update'])->name('withdrawals.update');
+});
+
+// Owner Routes
+Route::middleware(['auth', \App\Http\Middleware\OwnerMiddleware::class])->prefix('owner')->name('owner.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Owner\OwnerDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/withdraw', [\App\Http\Controllers\Owner\OwnerDashboardController::class, 'withdraw'])->name('withdraw');
 });
 
 require __DIR__.'/auth.php';

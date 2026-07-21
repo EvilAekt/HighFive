@@ -95,9 +95,18 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">HIGHFIVE</div>
-        <div class="invoice-title">INVOICE</div>
+    <div class="header" style="text-align: left;">
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="vertical-align: middle; width: 50%;">
+                    <div style="font-size: 36px; font-weight: bold; letter-spacing: 2px; color: #000;">INVOICE</div>
+                    <div style="color: #777; margin-top: 5px; font-size: 16px;">#{{ $order->order_code }}</div>
+                </td>
+                <td style="text-align: right; vertical-align: middle; width: 50%;">
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/logo.png'))) }}" alt="HIGH FIVE Logo" style="max-height: 140px; object-fit: contain;">
+                </td>
+            </tr>
+        </table>
     </div>
 
     <table class="info-section">

@@ -90,6 +90,8 @@ class CheckoutController extends Controller
     public function store(Request $request, MidtransService $midtransService)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . auth()->id(),
             'address' => 'required|string|min:10',
             'phone' => 'required|string|min:10',
             'shipping_province' => 'required|string',
@@ -103,13 +105,13 @@ class CheckoutController extends Controller
 
         $user = auth()->user();
         
-        // Update user profile if needed
-        if (!$user->phone || !$user->address) {
-            $user->update([
-                'phone' => $request->phone,
-                'address' => $request->address,
-            ]);
-        }
+        // Always update the profile to ensure latest details are used
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'address' => $request->address,
+        ]);
 
         $carts = Cart::with(['variant.product'])->where('user_id', $user->id)->get();
         

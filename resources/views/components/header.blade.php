@@ -6,9 +6,18 @@
         $cartItems = \App\Models\Cart::with(['variant.product.images'])->where('user_id', auth()->id())->get();
     }
     $currentPath = request()->path();
+
+    // Cache recommended products for the search modal (1 hour) to avoid querying on every page load
+    $recommendedProducts = Cache::remember('header_recommended_products', 3600, function () {
+        return \App\Models\Product::with('images')
+            ->where('is_active', true)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+    });
 @endphp
 
-<header class="sticky top-0 z-50 bg-white dark:bg-onyx-800 border-b border-primary-200 dark:border-onyx-700 transition-colors duration-300" x-data="{ searchOpen: false, mobileMenuOpen: false, cartOpen: false }" @open-cart.window="cartOpen = true; if(window.innerWidth < 768) { mobileMenuOpen = false; }">
+<header class="sticky top-0 z-50 bg-white dark:bg-onyx-800 border-b border-primary-200 dark:border-onyx-700 transition-colors duration-300" x-data="headerData()" @open-cart.window="cartOpen = true; if(window.innerWidth < 768) { mobileMenuOpen = false; }" x-init="$watch('cartOpen', value => $dispatch('cart-toggled', value))">
     <!-- Top announcement bar -->
     <div class="bg-black text-white text-center py-2 px-4">
         <p class="text-xs tracking-widest uppercase font-medium">
@@ -109,44 +118,79 @@
                             </span>
                         </button>
                         <div x-show="open" 
-                             x-transition.opacity.duration.200ms
-                             class="absolute right-0 top-full mt-0 w-52 bg-white border border-primary-200 shadow-2xl z-50">
-                            <div class="px-4 py-3 border-b border-primary-100">
-                                <p class="text-xs text-primary-500 uppercase tracking-widest">Akun</p>
-                                <p class="text-sm font-medium mt-0.5">{{ auth()->user()->name }}</p>
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                             class="absolute right-0 top-full mt-2 w-64 bg-white/95 dark:bg-onyx-900/95 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-50 overflow-hidden">
+                            
+                            <!-- Header Info -->
+                            <div class="p-5 border-b border-black/5 dark:border-white/5 bg-gray-50/50 dark:bg-black/20">
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-[0.2em] mb-1">Akun Anda</p>
+                                <p class="text-base font-black tracking-tight text-black dark:text-white truncate">{{ auth()->user()->name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5">{{ auth()->user()->email }}</p>
                             </div>
-                            <a
-                                href="{{ route('orders.index') }}"
-                                class="flex items-center gap-2 px-4 py-3 hover:bg-primary-50 text-xs uppercase tracking-wider font-medium transition-colors"
-                            >
-                                <i data-lucide="package" class="w-3.5 h-3.5"></i>
-                                Pesanan Saya
-                            </a>
-                            <a
-                                href="{{ route('settings.index') }}"
-                                class="flex items-center gap-2 px-4 py-3 hover:bg-primary-50 text-xs uppercase tracking-wider font-medium transition-colors"
-                            >
-                                <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-                                Pengaturan Akun
-                            </a>
-                            @if(auth()->user()->isAdmin())
-                                <a
-                                    href="{{ route('admin.dashboard') }}"
-                                    class="flex items-center gap-2 px-4 py-3 hover:bg-primary-50 text-xs uppercase tracking-wider font-medium transition-colors"
-                                >
-                                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
-                                    Dashboard {{ ucfirst(auth()->user()->role) }}
+                            
+                            <!-- Menu Links -->
+                            <div class="py-2">
+                                <a href="{{ route('orders.index') }}" class="group flex items-center justify-between px-5 py-3 text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 transition-all duration-300">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="package" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                                        <span class="text-xs font-bold uppercase tracking-widest">Pesanan Saya</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
                                 </a>
-                            @endif
-                            <div class="border-t border-primary-100">
+
+                                @if(auth()->user()->isAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="group flex items-center justify-between px-5 py-3 text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 transition-all duration-300">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="shield" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                                        <span class="text-xs font-bold uppercase tracking-widest">Admin Panel</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                                </a>
+                                @endif
+                                
+                                @if(auth()->user()->isOwner())
+                                <a href="{{ route('owner.dashboard') }}" class="group flex items-center justify-between px-5 py-3 text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 transition-all duration-300">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="crown" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                                        <span class="text-xs font-bold uppercase tracking-widest">Owner Panel</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                                </a>
+                                @endif
+                                
+                                <a href="{{ route('settings.index') }}" class="group flex items-center justify-between px-5 py-3 text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 transition-all duration-300">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="settings" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                                        <span class="text-xs font-bold uppercase tracking-widest">Pengaturan</span>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                                </a>
+
+                                @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.dashboard') }}" class="group flex items-center justify-between px-5 py-3 text-gray-900 dark:text-white hover:bg-gray-900 hover:text-white dark:hover:bg-white dark:hover:text-gray-900 transition-all duration-300 bg-gray-50 dark:bg-onyx-800/50 border-y border-black/5 dark:border-white/5 my-1">
+                                        <div class="flex items-center gap-3">
+                                            <i data-lucide="layout-dashboard" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                                            <span class="text-xs font-bold uppercase tracking-widest">Dashboard {{ ucfirst(auth()->user()->role) }}</span>
+                                        </div>
+                                        <i data-lucide="arrow-right" class="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                                    </a>
+                                @endif
+                            </div>
+                            
+                            <!-- Logout Button -->
+                            <div class="border-t border-black/5 dark:border-white/5 p-2 bg-gray-50/50 dark:bg-black/20">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button
-                                        type="submit"
-                                        class="w-full flex items-center gap-2 px-4 py-3 hover:bg-primary-50 text-xs uppercase tracking-wider font-medium text-left transition-colors text-primary-500 hover:text-black"
-                                    >
-                                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                                        Keluar
+                                    <button type="submit" class="group flex items-center justify-between w-full px-3 py-2.5 text-red-500 hover:bg-red-600 hover:text-white transition-all duration-300 rounded">
+                                        <div class="flex items-center gap-3">
+                                            <i data-lucide="log-out" class="w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity"></i>
+                                            <span class="text-xs font-bold uppercase tracking-widest">Keluar</span>
+                                        </div>
                                     </button>
                                 </form>
                             </div>
@@ -174,47 +218,81 @@
             </div>
         </div>
 
-        <!-- Search Drawer -->
-        <div x-show="searchOpen" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-2"
-             class="absolute top-full left-0 w-full bg-white border-b border-primary-200 shadow-2xl z-40 p-6 sm:p-10"
-             style="display: none;"
-             @click.outside="searchOpen = false">
-            <form action="{{ route('catalog') }}" method="GET" class="max-w-4xl mx-auto">
-                <div class="relative flex items-center border-b-2 border-primary-200 focus-within:border-black transition-colors pb-2">
-                    <i data-lucide="search" class="w-6 h-6 text-primary-400 mr-4"></i>
-                    <input
-                        type="search"
-                        name="q"
-                        value="{{ request('q') }}"
-                        placeholder="Ketik untuk mencari produk..."
-                        class="w-full py-2 text-xl sm:text-2xl font-light outline-none transition-colors text-black placeholder-primary-300 bg-transparent"
-                        x-ref="searchInput"
-                        @keydown.escape="searchOpen = false"
-                    />
-                    <button
-                        type="submit"
-                        class="hidden sm:block text-sm font-bold uppercase tracking-widest text-black hover:text-primary-500 transition-colors ml-4"
-                    >
-                        Cari
-                    </button>
-                    <button type="button" @click="searchOpen = false" class="ml-4 sm:ml-8 text-primary-400 hover:text-black transition-colors" aria-label="Close search">
-                        <i data-lucide="x" class="w-6 h-6"></i>
-                    </button>
+        <!-- Search Modal -->
+        <template x-teleport="body">
+            <div x-show="searchOpen" 
+                 class="fixed inset-0 z-[100] flex items-start justify-center pt-20 sm:pt-32 px-4 bg-black/60 backdrop-blur-sm"
+                 x-transition.opacity
+                 style="display: none;">
+                 
+                <div @click.outside="searchOpen = false"
+                     class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-8 scale-95">
+                     
+                    <form action="{{ route('catalog') }}" method="GET">
+                        <!-- Search Input Area -->
+                        <div class="relative flex items-center p-6 border-b border-gray-100">
+                            <i data-lucide="search" class="w-6 h-6 text-gray-400 absolute left-6"></i>
+                            <input
+                                type="search"
+                                name="q"
+                                value="{{ request('q') }}"
+                                placeholder="Ketik untuk mencari produk..."
+                                class="w-full pl-12 pr-12 py-3 text-xl font-light outline-none transition-colors text-black placeholder-gray-300 bg-transparent"
+                                x-ref="searchInput"
+                                @keydown.escape="searchOpen = false"
+                            />
+                            <button type="button" @click="searchOpen = false" class="absolute right-6 text-gray-400 hover:text-black transition-colors" aria-label="Close search">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Popular Searches & Suggestions -->
+                        <div class="p-6 bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-sm border-b border-gray-100">
+                            <span class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Pencarian Populer:</span>
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                                <a href="{{ route('catalog', ['category' => 'atasan']) }}" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:border-primary-500 hover:text-primary-900 transition-colors text-xs font-bold uppercase tracking-wide shadow-sm">Atasan</a>
+                                <a href="{{ route('catalog', ['category' => 'bawahan']) }}" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:border-primary-500 hover:text-primary-900 transition-colors text-xs font-bold uppercase tracking-wide shadow-sm">Bawahan</a>
+                                <a href="{{ route('catalog', ['category' => 'outerwear']) }}" class="px-4 py-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:border-primary-500 hover:text-primary-900 transition-colors text-xs font-bold uppercase tracking-wide shadow-sm">Outerwear</a>
+                            </div>
+                        </div>
+
+                        <!-- Recommended Products Grid -->
+                        <div class="p-6">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Mungkin Anda Suka</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                @foreach($recommendedProducts as $prod)
+                                    <a href="{{ route('product.show', $prod->id) }}" class="group text-left bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary-500 relative flex flex-col">
+                                        <!-- Image -->
+                                        <div class="aspect-square bg-gray-100 w-full overflow-hidden relative">
+                                            @php
+                                                $imageUrl = $prod->thumbnail ? (str_starts_with($prod->thumbnail, 'http') ? $prod->thumbnail : (str_starts_with($prod->thumbnail, '/') ? $prod->thumbnail : '/' . $prod->thumbnail)) : ($prod->images->count() > 0 ? '/storage/' . $prod->images->first()->image_path : 'https://placehold.co/300');
+                                            @endphp
+                                            <img src="{{ $imageUrl }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            @if($prod->is_flash_sale)
+                                                <div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider rounded">
+                                                    Promo
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <!-- Info -->
+                                        <div class="p-4 flex-1 flex flex-col justify-center text-center gap-1.5">
+                                            <p class="text-[10px] font-bold text-gray-900 line-clamp-2 leading-tight uppercase tracking-wide">{{ $prod->name }}</p>
+                                            <p class="text-[10px] font-bold text-gray-500">{{ formatPrice($prod->price) }}</p>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="mt-6 flex flex-wrap items-center gap-4 text-sm">
-                    <span class="text-primary-400 font-semibold uppercase tracking-widest text-xs">Pencarian Populer:</span>
-                    <a href="{{ route('catalog', ['category' => 'atasan']) }}" class="text-primary-900 hover:text-black hover:underline underline-offset-4 decoration-primary-300">Atasan</a>
-                    <a href="{{ route('catalog', ['category' => 'bawahan']) }}" class="text-primary-900 hover:text-black hover:underline underline-offset-4 decoration-primary-300">Bawahan</a>
-                    <a href="{{ route('catalog', ['category' => 'outerwear']) }}" class="text-primary-900 hover:text-black hover:underline underline-offset-4 decoration-primary-300">Outerwear</a>
-                </div>
-            </form>
-        </div>
+            </div>
+        </template>
 
         <!-- Mobile menu -->
         <div x-show="mobileMenuOpen" x-transition.opacity class="md:hidden py-4 border-t border-primary-200">
@@ -238,6 +316,16 @@
                 @endguest
                 
                 @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="px-2 py-3 text-xs font-semibold uppercase tracking-widest text-primary-500 hover:text-black dark:hover:text-white transition-colors border-b border-primary-100 flex items-center gap-2">
+                            <i data-lucide="shield" class="w-4 h-4"></i> Admin Panel
+                        </a>
+                    @endif
+                    @if(auth()->user()->isOwner())
+                        <a href="{{ route('owner.dashboard') }}" class="px-2 py-3 text-xs font-semibold uppercase tracking-widest text-primary-500 hover:text-black dark:hover:text-white transition-colors border-b border-primary-100 flex items-center gap-2">
+                            <i data-lucide="crown" class="w-4 h-4"></i> Owner Panel
+                        </a>
+                    @endif
                     <a href="{{ route('orders.index') }}" class="px-2 py-3 text-xs font-semibold uppercase tracking-widest text-primary-500 hover:text-black dark:hover:text-white transition-colors border-b border-primary-100 flex items-center gap-2">
                         <i data-lucide="package" class="w-4 h-4"></i> Pesanan Saya
                     </a>
@@ -278,8 +366,14 @@
                     </button>
                 </div>
                 
-                <!-- Drawer Body (Cart Items) -->
-                <div class="flex-1 overflow-y-auto p-6" id="cart-drawer-items">
+                <div id="cart-drawer-content" class="flex flex-col flex-1 overflow-hidden relative">
+                    <!-- Loading overlay -->
+                    <div x-show="isCartUpdating" class="absolute inset-0 z-50 bg-white/40 dark:bg-black/40 backdrop-blur-[2px] flex items-center justify-center transition-opacity" style="display: none;">
+                        <svg class="animate-spin h-8 w-8 text-black dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </div>
+
+                    <!-- Drawer Body (Cart Items) -->
+                    <div class="flex-1 overflow-y-auto p-6" id="cart-drawer-items">
                     @if($cartItems->count() > 0)
                         <div class="space-y-6">
                             @php $totalPrice = 0; @endphp
@@ -303,23 +397,23 @@
                                                 <h3 class="text-sm font-bold uppercase tracking-tight line-clamp-1">{{ $item->variant->product->name }}</h3>
                                                 <p class="text-xs text-primary-500 uppercase tracking-widest mt-1">{{ $item->variant->color }} - {{ $item->variant->size }}</p>
                                             </div>
-                                            <form action="{{ route('cart.remove', $item->id) }}" method="POST">
+                                            <form action="{{ route('cart.remove', $item->id) }}" method="POST" @submit.prevent="updateCart($el)">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="text-primary-400 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                             </form>
                                         </div>
                                         <div class="mt-auto flex items-end justify-between">
                                             <div class="flex items-center border border-primary-200 dark:border-onyx-700">
-                                                <form action="{{ route('cart.update', $item->id) }}" method="POST" class="flex items-center">
+                                                <form action="{{ route('cart.update', $item->id) }}" method="POST" class="flex items-center" @submit.prevent="updateCart($el)">
                                                     @csrf @method('PATCH')
                                                     <input type="hidden" name="quantity" value="{{ $item->quantity - 1 }}">
-                                                    <button type="submit" class="px-2 py-1 text-primary-500 hover:text-black dark:hover:text-white" {{ $item->quantity <= 1 ? 'disabled' : '' }}>-</button>
+                                                    <button type="submit" class="px-2 py-1 text-primary-500 hover:text-black dark:hover:text-white disabled:opacity-30 disabled:hover:text-primary-500 disabled:cursor-not-allowed" {{ $item->quantity <= 1 ? 'disabled' : '' }}>-</button>
                                                 </form>
                                                 <span class="text-xs font-bold px-2">{{ $item->quantity }}</span>
-                                                <form action="{{ route('cart.update', $item->id) }}" method="POST" class="flex items-center">
+                                                <form action="{{ route('cart.update', $item->id) }}" method="POST" class="flex items-center" @submit.prevent="updateCart($el)">
                                                     @csrf @method('PATCH')
                                                     <input type="hidden" name="quantity" value="{{ $item->quantity + 1 }}">
-                                                    <button type="submit" class="px-2 py-1 text-primary-500 hover:text-black dark:hover:text-white">+</button>
+                                                    <button type="submit" class="px-2 py-1 text-primary-500 hover:text-black dark:hover:text-white disabled:opacity-30 disabled:hover:text-primary-500 disabled:cursor-not-allowed" {{ $item->quantity >= $item->variant->stock ? 'disabled' : '' }}>+</button>
                                                 </form>
                                             </div>
                                             <span class="text-sm font-bold text-black dark:text-white">{{ formatPrice($subtotal) }}</span>
@@ -378,8 +472,57 @@
                     </a>
                 </div>
                 @endif
+                </div> <!-- End of cart-drawer-content -->
             </div>
         </div>
     </div>
     @endauth
 </header>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('headerData', () => ({
+            searchOpen: false,
+            mobileMenuOpen: false,
+            cartOpen: false,
+            isCartUpdating: false,
+            updateCart(form) {
+                if(this.isCartUpdating) return;
+                this.isCartUpdating = true;
+                
+                fetch(form.action, {
+                    method: form.method,
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const newContent = doc.getElementById('cart-drawer-content');
+                    if(newContent) {
+                        document.getElementById('cart-drawer-content').innerHTML = newContent.innerHTML;
+                    }
+                    
+                    const newBadge = doc.getElementById('cart-count-badge');
+                    const currentBadge = document.getElementById('cart-count-badge');
+                    if(newBadge && currentBadge) {
+                        currentBadge.outerHTML = newBadge.outerHTML;
+                    } else if(!newBadge && currentBadge) {
+                        currentBadge.remove();
+                    }
+                    
+                    if(typeof lucide !== 'undefined') { 
+                        lucide.createIcons(); 
+                    }
+                    
+                    // If on the full cart page or checkout, reload to sync changes
+                    if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+                        window.location.reload();
+                    }
+                })
+                .catch(() => window.location.reload())
+                .finally(() => this.isCartUpdating = false);
+            }
+        }));
+    });
+</script>

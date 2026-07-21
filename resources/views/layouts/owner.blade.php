@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Admin - HIGH FIVE</title>
+    <title>Owner - HIGH FIVE</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,57 +33,21 @@
     <!-- Sidebar -->
     <aside class="w-64 bg-black text-white flex flex-col z-10 border-r border-gray-200">
         <div class="p-6 border-b border-gray-800">
-            <a href="{{ route('admin.dashboard') }}" class="text-2xl font-black uppercase tracking-widest text-white">
+            <a href="{{ route('owner.dashboard') }}" class="text-2xl font-black uppercase tracking-widest text-white">
                 HIGH<span class="text-gray-400">FIVE</span>
             </a>
-            <p class="text-gray-400 text-[10px] mt-1 font-bold tracking-[0.2em] uppercase">Admin Console</p>
+            <p class="text-gray-400 text-[10px] mt-1 font-bold tracking-[0.2em] uppercase">Owner Workspace</p>
         </div>
 
         <nav class="flex-1 px-4 py-6 overflow-y-auto">
             <ul class="space-y-1">
                 <li>
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
+                    <a href="{{ route('owner.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('owner.dashboard') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
                         <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                        Dashboard
+                        Overview
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.products.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="package" class="w-4 h-4"></i>
-                        Produk
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.coupons.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.coupons.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="ticket" class="w-4 h-4"></i>
-                        Kupon
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.orders.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                        Pesanan
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="users" class="w-4 h-4"></i>
-                        Pelanggan
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.chat.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.chat.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="message-square-text" class="w-4 h-4"></i>
-                        Live Chat
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.withdrawals.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('admin.withdrawals.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
-                        <i data-lucide="banknote" class="w-4 h-4"></i>
-                        Tarik Dana
-                    </a>
-                </li>
-
+                
                 <li class="pt-6 mt-6 border-t border-gray-800">
                     <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors {{ request()->routeIs('settings.*') ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-900 hover:text-white' }}">
                         <i data-lucide="settings" class="w-4 h-4"></i>

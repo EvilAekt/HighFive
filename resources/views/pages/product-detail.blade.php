@@ -82,10 +82,7 @@
             $allImages = collect([$product->thumbnail])->merge($product->images->pluck('image_path'))->filter()->unique()->values()->toArray();
         @endphp
         <div class="space-y-4" x-data="{ activeImage: 0, images: {{ json_encode($allImages) }} }">
-            <div class="relative aspect-[3/4] bg-primary-100 dark:bg-onyx-700 border border-primary-200 dark:border-onyx-600 overflow-hidden group cursor-crosshair"
-                 x-data="{ showZoom: false, bgPos: '0% 0%' }"
-                 @mousemove="const rect = $el.getBoundingClientRect(); const x = (($event.clientX - rect.left) / rect.width) * 100; const y = (($event.clientY - rect.top) / rect.height) * 100; bgPos = x + '% ' + y + '%'; showZoom = true"
-                 @mouseleave="showZoom = false"
+            <div class="relative aspect-[3/4] bg-primary-100 dark:bg-onyx-700 border border-primary-200 dark:border-onyx-600 overflow-hidden group cursor-pointer"
                  @click="lightboxOpen = true; lightboxUrl = images[activeImage]; lightboxType = 'image'">
                  
                 <template x-for="(image, index) in images" :key="index">
@@ -98,33 +95,21 @@
                          x-transition:leave-end="opacity-0 scale-95">
                          
                         <img :src="image" :alt="'{{ $product->name }}'" 
-                             class="w-full h-full object-cover transition-opacity duration-300"
-                             :class="showZoom ? 'opacity-0' : 'opacity-100'" />
-                        <!-- Zoomed Image -->
-                        <div class="absolute inset-0 w-full h-full bg-no-repeat"
-                             :style="'background-image: url(\'' + image + '\'); background-position: ' + bgPos + '; background-size: 250%;'"
-                             x-show="showZoom"
-                             x-transition.opacity.duration.200ms>
-                        </div>
+                             class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75" />
                     </div>
                 </template>
                 <!-- Fallback -->
                 <div class="absolute inset-0 w-full h-full" x-show="images.length === 0">
-                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" class="w-full h-full object-cover transition-opacity duration-300" :class="showZoom ? 'opacity-0' : 'opacity-100'" />
-                    <div class="absolute inset-0 w-full h-full bg-no-repeat"
-                         :style="'background-image: url(\'{{ $product->thumbnail }}\'); background-position: ' + bgPos + '; background-size: 250%;'"
-                         x-show="showZoom"
-                         x-transition.opacity.duration.200ms>
-                    </div>
+                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75" />
                 </div>
                 
                 <!-- Slider Controls -->
                 <template x-if="images.length > 1">
                     <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button @click.prevent="activeImage = (activeImage - 1 + images.length) % images.length" class="w-10 h-10 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow rounded-full backdrop-blur-sm transition-transform hover:scale-110">
+                        <button @click.prevent.stop="activeImage = (activeImage - 1 + images.length) % images.length" class="w-10 h-10 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow rounded-full backdrop-blur-sm transition-transform hover:scale-110">
                             <i data-lucide="chevron-left" class="w-5 h-5"></i>
                         </button>
-                        <button @click.prevent="activeImage = (activeImage + 1) % images.length" class="w-10 h-10 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow rounded-full backdrop-blur-sm transition-transform hover:scale-110">
+                        <button @click.prevent.stop="activeImage = (activeImage + 1) % images.length" class="w-10 h-10 flex items-center justify-center bg-white/80 hover:bg-white text-black shadow rounded-full backdrop-blur-sm transition-transform hover:scale-110">
                             <i data-lucide="chevron-right" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -328,34 +313,38 @@
     @endif
 
     <!-- Reviews Section -->
-    <div id="reviews" class="border-t border-primary-200 pt-16">
-        <h2 class="text-2xl font-black uppercase tracking-tight text-primary-900 dark:text-white mb-8">Ulasan Pelanggan</h2>
+    <div id="reviews" class="border-t-4 border-black dark:border-white pt-16 mb-16">
+        <h2 class="text-3xl font-black uppercase tracking-tight text-black dark:text-white mb-10 text-center">Ulasan Pelanggan</h2>
         
         <!-- Only showing existing reviews -->
-        <div class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             @forelse($reviews as $review)
-                <div class="pb-6 border-b border-primary-100 last:border-0">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="font-medium text-sm">{{ $review->user->name }}</p>
-                        <span class="text-xs text-primary-500">{{ formatDate($review->created_at) }}</span>
+                <div class="bg-white dark:bg-onyx-900 border-4 border-black dark:border-white p-6 shadow-[8px_8px_0_0_#000] dark:shadow-[8px_8px_0_0_#fff] flex flex-col transition-transform hover:-translate-y-1 hover:shadow-[12px_12px_0_0_#000] dark:hover:shadow-[12px_12px_0_0_#fff]">
+                    <div class="flex items-center justify-between mb-4 border-b-4 border-black dark:border-white pb-4">
+                        <p class="font-black text-sm uppercase tracking-widest text-black dark:text-white">{{ $review->user->name }}</p>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{{ formatDate($review->created_at) }}</span>
                     </div>
-                    @include('components.star-rating', ['rating' => $review->rating, 'size' => 'sm'])
+                    
+                    <div class="mb-4">
+                        @include('components.star-rating', ['rating' => $review->rating, 'size' => 'sm'])
+                    </div>
+                    
                     @if($review->comment)
-                        <p class="text-primary-700 text-sm mt-3">{{ $review->comment }}</p>
+                        <p class="text-black dark:text-gray-300 text-sm font-medium italic flex-1">"{{ $review->comment }}"</p>
                     @endif
-                    <div class="flex gap-4 mt-4">
+                    
+                    <div class="flex flex-wrap gap-4 mt-6">
                         @if($review->image)
-                            <div>
+                            <div class="relative group cursor-pointer border-2 border-black dark:border-white overflow-hidden shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_#fff]" @click="lightboxOpen = true; lightboxUrl = '{{ asset('storage/' . $review->image) }}'; lightboxType = 'image'">
                                 <img src="{{ asset('storage/' . $review->image) }}" alt="Foto Ulasan" 
-                                     class="w-24 h-24 object-cover border border-primary-200 shadow-sm hover:scale-105 transition-transform cursor-pointer" 
-                                     @click="lightboxOpen = true; lightboxUrl = '{{ asset('storage/' . $review->image) }}'; lightboxType = 'image'">
+                                     class="w-20 h-20 sm:w-24 sm:h-24 object-cover group-hover:scale-110 grayscale group-hover:grayscale-0 transition-all duration-300">
                             </div>
                         @endif
                         @if($review->video)
-                            <div class="relative group cursor-pointer" @click="lightboxOpen = true; lightboxUrl = '{{ asset('storage/' . $review->video) }}'; lightboxType = 'video'">
-                                <video src="{{ asset('storage/' . $review->video) }}" class="w-32 h-24 object-cover border border-primary-200 shadow-sm group-hover:opacity-80 transition-opacity"></video>
-                                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-40 transition-all">
-                                    <i data-lucide="play-circle" class="w-8 h-8 text-white opacity-80"></i>
+                            <div class="relative group cursor-pointer border-2 border-black dark:border-white overflow-hidden shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_#fff]" @click="lightboxOpen = true; lightboxUrl = '{{ asset('storage/' . $review->video) }}'; lightboxType = 'video'">
+                                <video src="{{ asset('storage/' . $review->video) }}" class="w-24 h-20 sm:w-32 sm:h-24 object-cover grayscale group-hover:grayscale-0 transition-all duration-300"></video>
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors">
+                                    <i data-lucide="play" class="w-8 h-8 text-white fill-white"></i>
                                 </div>
                             </div>
                         @endif
@@ -375,9 +364,9 @@
     </div>
     
     <!-- Lightbox Modal -->
-    <div x-show="lightboxOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-95 p-4" x-transition.opacity>
-        <button @click="lightboxOpen = false; lightboxUrl = ''" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
-            <i data-lucide="x" class="w-8 h-8"></i>
+    <div x-show="lightboxOpen" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/20 dark:bg-black/40 backdrop-blur-md p-4" x-transition.opacity>
+        <button @click="lightboxOpen = false; lightboxUrl = ''" class="absolute top-6 right-6 text-black dark:text-white bg-white/50 dark:bg-black/50 hover:bg-white dark:hover:bg-black rounded-full p-2 transition-all backdrop-blur-sm shadow-sm">
+            <i data-lucide="x" class="w-6 h-6"></i>
         </button>
         
         <div class="max-w-5xl max-h-[90vh] w-full flex justify-center items-center" @click.outside="lightboxOpen = false; lightboxUrl = ''">

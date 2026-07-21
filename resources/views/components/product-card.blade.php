@@ -4,8 +4,11 @@
     $isWishlisted = auth()->check() ? \App\Models\Wishlist::where('user_id', auth()->id())->where('product_id', $product->id)->exists() : false;
 @endphp
 
-<div x-data="{ activeImage: 0, images: {{ json_encode(collect([$product->thumbnail])->merge($product->images->pluck('image_path'))->filter()->unique()->values()->toArray()) }} }" class="group block animate-fade-up relative">
-    <div class="bg-white dark:bg-onyx-800 border border-transparent dark:border-onyx-700 hover:border-black dark:hover:border-onyx-500 transition-all duration-500 relative shadow-sm hover:shadow-2xl">
+<div x-data="{ activeImage: 0, hoverActive: false, images: {{ json_encode(collect([$product->thumbnail])->merge($product->images->pluck('image_path'))->filter()->unique()->values()->toArray()) }} }" 
+     @mouseenter="if(images.length > 1) { activeImage = 1; hoverActive = true; }"
+     @mouseleave="if(hoverActive) { activeImage = 0; hoverActive = false; }"
+     class="group block animate-fade-up relative">
+    <div class="bg-white dark:bg-onyx-800 border-2 border-transparent dark:border-onyx-700 hover:border-black dark:hover:border-onyx-500 transition-all duration-300 relative shadow-sm hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] hover:-translate-y-1 hover:-translate-x-1">
         <div class="relative aspect-[3/4] bg-primary-50 dark:bg-onyx-900 overflow-hidden group/slider" x-data="{ loaded: false }">
             <!-- Skeleton Loader (Shimmer) -->
             <div x-show="!loaded" class="absolute inset-0 z-0 bg-gray-200 dark:bg-onyx-700 animate-pulse"></div>
@@ -13,7 +16,7 @@
             <a href="{{ route('product.show', $product->id) }}" class="block w-full h-full z-10 relative">
                 @if($product->thumbnail)
                     <template x-for="(image, index) in images" :key="index">
-                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 absolute inset-0 transition-opacity" :class="loaded ? 'opacity-100' : 'opacity-0'" x-transition.opacity.duration.500ms />
+                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-all duration-700 absolute inset-0" :class="[loaded ? 'opacity-100' : 'opacity-0', images.length === 1 ? 'group-hover:scale-105 group-hover:brightness-90' : '']" x-transition.opacity.duration.500ms />
                     </template>
                     <!-- Preload / Event listener for the first image -->
                     <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" x-show="false" @load="loaded = true" x-init="if($el.complete) loaded = true" class="w-full h-full object-cover absolute inset-0" />
@@ -22,6 +25,11 @@
                         <span class="text-xs uppercase tracking-widest text-primary-400 dark:text-gray-500">No Image</span>
                     </div>
                 @endif
+                
+                <!-- Quick View Bar -->
+                <div class="absolute bottom-0 inset-x-0 bg-black dark:bg-white text-white dark:text-black text-[10px] sm:text-xs font-bold uppercase tracking-widest py-3 sm:py-4 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20">
+                    View Details
+                </div>
             </a>
 
             <!-- Wishlist Button -->

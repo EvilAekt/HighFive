@@ -23,13 +23,27 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
+        $variant = \App\Models\ProductVariant::findOrFail($request->variant_id);
+        
         $cart = Cart::where('user_id', auth()->id())
             ->where('product_variant_id', $request->variant_id)
             ->first();
 
+        $newQuantity = $cart ? $cart->quantity + $request->quantity : $request->quantity;
+
+        if ($newQuantity > $variant->stock) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stok produk tidak mencukupi'
+                ], 400);
+            }
+            return back()->with('error', 'Stok produk tidak mencukupi (Tersisa: ' . $variant->stock . ')');
+        }
+
         if ($cart) {
             $cart->update([
-                'quantity' => $cart->quantity + $request->quantity
+                'quantity' => $newQuantity
             ]);
         } else {
             Cart::create([
@@ -51,10 +65,10 @@ class CartController extends Controller
 
     public function update(Request $request, $id)
     {
-        $cart = Cart::where('user_id', auth()->id())->findOrFail($id);
+        $cart = Cart::with('variant')->where('user_id', auth()->id())->findOrFail($id);
         
         $request->validate([
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1|max:' . $cart->variant->stock
         ]);
 
         $cart->update(['quantity' => $request->quantity]);

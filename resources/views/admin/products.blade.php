@@ -49,7 +49,7 @@
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <p class="font-medium">{{ $product->name }}</p>
-                                            @if($product->is_flash_sale)
+                                            @if($product->is_flash_sale_active)
                                                 <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                                     <i data-lucide="zap" class="w-3 h-3 fill-red-700"></i> Flash Sale
                                                 </span>
@@ -120,7 +120,7 @@
                 </button>
             </div>
 
-            <form id="productForm" action="{{ route('admin.products.store') }}" method="POST" class="p-4 space-y-4">
+            <form id="productForm" action="{{ route('admin.products.store') }}" method="POST" class="p-4 space-y-4" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="methodField" value="POST">
                 
@@ -154,19 +154,23 @@
                     </select>
                 </div>
 
-                <div x-data="{ images: [''] }" @reset-images.window="images = ['']" @load-images.window="images = $event.detail.length ? $event.detail : ['']">
-                    <label class="block text-sm font-medium mb-1">URL Gambar Produk (Multiple)</label>
-                    <template x-for="(image, index) in images" :key="index">
-                        <div class="flex gap-2 mb-2">
-                            <input type="url" :name="'image_urls['+index+']'" x-model="images[index]" class="input-field flex-1" placeholder="https://example.com/image.jpg" />
-                            <button type="button" @click="images.splice(index, 1)" x-show="images.length > 1" class="px-3 py-2 bg-red-50 text-red-500 hover:bg-red-100 border border-red-200">
-                                <i data-lucide="trash" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </template>
-                    <button type="button" @click="images.push('')" class="text-xs font-semibold uppercase tracking-widest text-primary-600 hover:text-black mt-2 flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3 h-3"></i> Tambah Gambar Lainnya
-                    </button>
+                <div x-data="{ images: [] }" @reset-images.window="images = []" @load-images.window="images = $event.detail || []">
+                    <label class="block text-sm font-medium mb-2">Gambar Produk (Bisa pilih banyak file)</label>
+                    
+                    <div class="flex flex-wrap gap-4 mb-4" x-show="images.length > 0">
+                        <template x-for="(image, index) in images" :key="index">
+                            <div class="relative w-24 h-24 border border-gray-200 shadow-sm" x-show="image">
+                                <img :src="image.startsWith('http') || image.startsWith('/') ? image : '/' + image" class="w-full h-full object-cover" />
+                                <input type="hidden" name="existing_images[]" :value="image" />
+                                <button type="button" @click="images.splice(index, 1)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 transition-colors">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <input type="file" name="image_files[]" multiple accept="image/*" class="input-field py-2" />
+                    <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, WEBP. Maksimal 5MB per gambar.</p>
                 </div>
 
                 <div x-data="{ variants: [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }] }" @reset-images.window="variants = [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }]" @load-variants.window="variants = $event.detail.length ? $event.detail : [{ id: '', size: '', color: '', stock: 0, additional_price: 0 }]">

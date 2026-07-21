@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class ChatController extends Controller
 {
     private function getSessionId(Request $request)
     {
+        if (auth()->check()) {
+            return (string) auth()->id();
+        }
+
         if (!session()->has('chat_session_id')) {
-            session(['chat_session_id' => Str::uuid()->toString()]);
+            session(['chat_session_id' => \Illuminate\Support\Str::uuid()->toString()]);
         }
         return session('chat_session_id');
     }
@@ -20,7 +26,7 @@ class ChatController extends Controller
     {
         $sessionId = $this->getSessionId($request);
         
-        $messages = Message::where('session_id', $sessionId)
+        $messages = Message::with(['replyTo', 'product.images'])->where('session_id', $sessionId)
             ->orderBy('created_at', 'asc')
             ->get();
             
@@ -33,7 +39,9 @@ class ChatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'content' => 'required|string|max:1000'
+            'content' => 'required|string|max:1000',
+            'reply_to_id' => 'nullable|exists:messages,id',
+            'product_id' => 'nullable|exists:products,id',
         ]);
 
         $sessionId = $this->getSessionId($request);
@@ -44,22 +52,64 @@ class ChatController extends Controller
             'is_admin' => false,
             'content' => $request->content,
             'is_read' => false,
+            'reply_to_id' => $request->reply_to_id,
+            'product_id' => $request->product_id,
         ]);
 
         // Auto-reply Bot Logic (Using Gemini AI)
         $botReply = null;
+        $botProductId = null;
         $geminiKey = env('GEMINI_API_KEY');
+        $isAiActive = Cache::get('ai_active', true);
+        $isBotActive = Cache::get('bot_active', true);
 
-        if ($geminiKey) {
+        if ($geminiKey && $isAiActive) {
             try {
-                $prompt = "Kamu adalah karyawan dan Admin Customer Service kebanggaan dari toko baju lokal bernama HIGH FIVE. 
-Tugasmu adalah melayani pelanggan dengan ramah, santai, gaul (selalu panggil pelanggan dengan 'kak'), dan sangat profesional. 
-Tanamkan identitas bahwa kamu sangat bangga bekerja di HIGH FIVE. Jika ada yang bertanya identitasmu, jawablah bahwa kamu adalah admin/karyawan HIGH FIVE. Jawablah setiap pertanyaan dalam 1-2 kalimat pendek saja yang terasa natural layaknya manusia.
-Pertanyaan Pelanggan: '{$request->content}'
-WAJIB keluarkan HANYA valid JSON tanpa format markdown, dengan struktur persis seperti ini:
-{\"reply\": \"tulis balasan akhir kamu di sini\"}";
+                // Fetch Product Context
+                $products = \App\Models\Product::with('variants')->where('is_active', true)->get();
+                
+                $soldItems = \Illuminate\Support\Facades\DB::table('order_items')
+                    ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+                    ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                    ->where('orders.status', 'paid')
+                    ->select('product_variants.product_id', \Illuminate\Support\Facades\DB::raw('SUM(order_items.quantity) as total_sold'))
+                    ->groupBy('product_variants.product_id')
+                    ->pluck('total_sold', 'product_id');
 
-                $response = \Illuminate\Support\Facades\Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key={$geminiKey}", [
+                $productContext = "DATA STOK, HARGA, DESKRIPSI, DAN PENJUALAN PRODUK:\n";
+                foreach ($products as $p) {
+                    $terjual = $soldItems->get($p->id, 0);
+                    $rilis = $p->created_at->format('d M Y');
+                    $productContext .= "- ID: {$p->id} | {$p->name} (Harga: Rp " . number_format($p->price, 0, ',', '.') . " | Terjual: {$terjual} pcs | Rilis: {$rilis}). Deskripsi: {$p->description}. Varian: ";
+                    
+                    if ($p->variants->isEmpty()) {
+                        $productContext .= "Tidak ada varian/Stok Kosong.\n";
+                    } else {
+                        $variants = [];
+                        foreach ($p->variants as $v) {
+                            $colorStr = $v->color ? "Warna {$v->color} " : "";
+                            $variants[] = "{$colorStr}Ukuran {$v->size} ({$v->stock} pcs)";
+                        }
+                        $productContext .= implode(', ', $variants) . ".\n";
+                    }
+                }
+
+                $prompt = "Kamu adalah bot admin Customer Service dari toko baju HIGH FIVE. 
+Tugasmu:
+1. Panggil pengguna dengan 'kak'.
+2. Jawab SANGAT SINGKAT (1 atau 2 kalimat saja).
+3. Jika pertanyaannya halo/hai pertama kali, balas sapaan. Jika pertanyaan di luar konteks toko, keluhan rumit, atau tidak masuk akal, KAMU HARUS DIAM (jawab dengan string kosong \"\"). Jangan terus-menerus bilang 'Halo kak ada yang bisa dibantu'. Hanya jawab yang masuk akal terkait pakaian/toko.
+4. Gunakan DATA STOK, HARGA, DAN PENJUALAN di bawah ini untuk menjawab pertanyaan soal stok, warna, ketersediaan ukuran, atau harga. Jika stok 0 atau ukuran/warna tidak ada, sampaikan habis/tidak ada.
+5. Jika pelanggan meminta rekomendasi, rekomendasikan produk dengan jumlah 'Terjual' paling banyak (atau 'Rilis' terbaru jika diminta yang baru).
+6. PENTING: Jika kamu menyebutkan atau merekomendasikan produk spesifik, tulislah ID produk tersebut di kolom 'product_id' pada output JSON agar sistem memunculkan foto produk! JANGAN tulis link HTML di kolom reply.
+
+{$productContext}
+
+Pertanyaan Pelanggan: '{$request->content}'
+Keluarkan HANYA valid JSON seperti ini:
+{\"reply\": \"jawabanmu di sini\", \"product_id\": \"isi dengan ID produk yang direkomendasikan jika ada, selain itu kosongkan string\"}";
+
+                $response = \Illuminate\Support\Facades\Http::timeout(60)->post("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key={$geminiKey}", [
                     'contents' => [
                         ['parts' => [['text' => $prompt]]]
                     ],
@@ -68,30 +118,41 @@ WAJIB keluarkan HANYA valid JSON tanpa format markdown, dengan struktur persis s
                     ]
                 ]);
 
+                \Illuminate\Support\Facades\Log::info('Gemini Raw Response: ' . $response->body());
+
                 if ($response->successful()) {
-                    $rawText = $response->json('candidates.0.content.parts.0.text');
+                    $parts = $response->json('candidates.0.content.parts');
+                    $rawText = '';
+                    if (is_array($parts)) {
+                        foreach ($parts as $part) {
+                            if (empty($part['thought'])) {
+                                $rawText .= $part['text'] ?? '';
+                            }
+                        }
+                    } else {
+                        $rawText = $response->json('candidates.0.content.parts.0.text', '');
+                    }
                     
-                    // Ekstrak JSON menggunakan Regex dari output yang berisik
                     if (preg_match('/\{.*\}/s', $rawText, $matches)) {
                         $jsonText = $matches[0];
                         $decoded = json_decode($jsonText, true);
-                        if ($decoded && isset($decoded['reply'])) {
+                        if ($decoded && isset($decoded['reply']) && trim($decoded['reply']) !== '') {
                             $botReply = trim($decoded['reply']);
+                            if (isset($decoded['product_id']) && trim($decoded['product_id']) !== '') {
+                                $botProductId = trim($decoded['product_id']);
+                            }
                         }
                     }
-                    
-                    // Fallback aman jika parsing JSON benar-benar gagal
-                    if (!$botReply) {
-                        $botReply = "Halo kak! Ada yang bisa dibantu?"; 
-                    }
+                } else {
+                    \Illuminate\Support\Facades\Log::error('Gemini API Error Status: ' . $response->status());
                 }
             } catch (\Exception $e) {
-                // Silently fail to fallback
+                \Illuminate\Support\Facades\Log::error('Gemini API Exception: ' . $e->getMessage());
             }
         }
-        
-        // Fallback if API fails or no key
-        if (!$botReply) {
+
+        // Rule-based Bot Fallback
+        if (!$botReply && $isBotActive) {
             $lowercaseContent = strtolower($request->content);
             if (str_contains($lowercaseContent, 'harga') || str_contains($lowercaseContent, 'price')) {
                 $botReply = "Halo kak! Untuk detail harga masing-masing produk sudah tertera di halaman produk ya. Ada koleksi spesifik yang ingin ditanyakan?";
@@ -99,6 +160,8 @@ WAJIB keluarkan HANYA valid JSON tanpa format markdown, dengan struktur persis s
                 $botReply = "Pengiriman kami mencakup seluruh Indonesia. Dapatkan GRATIS ONGKIR untuk pembelian di atas Rp 500.000! 🚚";
             } elseif (str_contains($lowercaseContent, 'ready') || str_contains($lowercaseContent, 'stok') || str_contains($lowercaseContent, 'halo') || str_contains($lowercaseContent, 'p')) {
                 $botReply = "Halo kak! Semua produk yang bisa dipilih ukurannya di website artinya READY ya. Ada yang bisa dibantu? 💖";
+            } elseif (str_contains($lowercaseContent, 'test') || str_contains($lowercaseContent, 'tes')) {
+                $botReply = "Bot otomatis HIGH FIVE sedang aktif kak! Ada yang bisa kami bantu? 🤖";
             } else {
                 $messageCount = Message::where('session_id', $sessionId)->count();
                 if ($messageCount <= 1) {
@@ -110,15 +173,39 @@ WAJIB keluarkan HANYA valid JSON tanpa format markdown, dengan struktur persis s
         if ($botReply) {
             // Small artificial delay so it feels like a bot typing (executed quickly but timestamps differ slightly)
             sleep(1); 
-            Message::create([
+            $botMessage = Message::create([
                 'session_id' => $sessionId,
                 'user_id' => null,
                 'is_admin' => true,
                 'content' => $botReply,
                 'is_read' => false, // User hasn't read it yet
+                'reply_to_id' => $message->id, // Bot always replies to the incoming message
+                'product_id' => $botProductId, // Attach the recommended product
             ]);
         }
 
         return response()->json($message);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $sessionId = $this->getSessionId($request);
+        $message = Message::where('session_id', $sessionId)->where('id', $id)->firstOrFail();
+        
+        // Allow user to delete their own message or hide it
+        $message->delete();
+        
+        return response()->json(['success' => true]);
+    }
+
+    public function report(Request $request, $id)
+    {
+        $sessionId = $this->getSessionId($request);
+        $message = Message::where('session_id', $sessionId)->where('id', $id)->firstOrFail();
+        
+        // Mocking the report functionality
+        // In a real application, you might save this to a 'reports' table
+        
+        return response()->json(['success' => true, 'message' => 'Pesan telah dilaporkan.']);
     }
 }

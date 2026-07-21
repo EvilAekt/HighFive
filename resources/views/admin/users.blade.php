@@ -51,8 +51,9 @@
                     <div>
                         <label class="block text-sm font-medium text-primary-700 mb-1">Role</label>
                         <select name="role" required class="w-full px-3 py-2 border border-primary-300 focus:border-black outline-none transition-colors bg-white">
-                            <option value="pengunjung">Pengunjung</option>
+                            <option value="user">User / Pelanggan</option>
                             <option value="admin">Admin</option>
+                            <option value="owner">Owner</option>
                         </select>
                     </div>
                     <div class="pt-4 flex justify-end gap-2">
@@ -75,6 +76,7 @@
                         <th class="px-4 py-3 font-medium">Telepon</th>
                         <th class="px-4 py-3 font-medium">Role</th>
                         <th class="px-4 py-3 font-medium">Terdaftar</th>
+                        <th class="px-4 py-3 font-medium text-right">Ubah Role</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,11 +86,26 @@
                             <td class="px-4 py-3 text-sm">{{ $user->email }}</td>
                             <td class="px-4 py-3 text-sm">{{ $user->phone ?? '-' }}</td>
                             <td class="px-4 py-3">
-                                <span class="inline-block px-2 py-1 text-xs font-medium rounded {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
-                                    {{ $user->role }}
+                                <span class="inline-block px-2 py-1 text-xs font-medium rounded {{ $user->role === 'owner' ? 'bg-black text-white' : ($user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700') }}">
+                                    {{ strtoupper($user->role) }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm">{{ formatDate($user->created_at) }}</td>
+                            <td class="px-4 py-3 text-right">
+                                @if(auth()->id() !== $user->id)
+                                    <form action="{{ route('admin.users.role', $user->id) }}" method="POST" class="inline-block">
+                                        @csrf
+                                        @method('PUT')
+                                        <select name="role" onchange="this.form.submit()" class="text-xs px-2 py-1 border border-primary-300 rounded outline-none focus:border-black cursor-pointer bg-white">
+                                            <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
+                                            <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                            <option value="owner" {{ $user->role === 'owner' ? 'selected' : '' }}>Owner</option>
+                                        </select>
+                                    </form>
+                                @else
+                                    <span class="text-xs text-primary-400 italic">Dirimu sendiri</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
