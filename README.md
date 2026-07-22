@@ -90,6 +90,102 @@ graph LR
     DeleteCheck -->|Tidak| Delete[Hapus Permanen]
 ```
 
+### Alur Pemrosesan Pesanan (Order Fulfillment)
+```mermaid
+graph TD
+    NewOrder([Pesanan Baru Masuk]) --> AdminPanel[Admin Order Dashboard]
+    AdminPanel --> Review{Tinjau Status Pembayaran}
+    
+    Review -->|Belum Dibayar| Pending[Status: Pending]
+    Review -->|Sudah Dibayar| Process[Status: Processing]
+    
+    Process --> Pack[Siapkan & Packing Barang]
+    Pack --> Ship[Input Resi Pengiriman]
+    Ship -->|Update Database| Shipped[Status: Shipped]
+    
+    Shipped --> Delivered([Pesanan Selesai])
+```
+
+### Logika "Hype Drops" & Flash Sale
+```mermaid
+graph LR
+    User([Pengunjung]) --> Home[Halaman Utama]
+    Home --> Check{Cek Waktu Promo}
+    
+    Check -->|Sedang Berlangsung| Show[Tampilkan Banner Merah & Hitung Mundur]
+    Check -->|Waktu Habis| Hide[Otomatis Sembunyikan Promo]
+    
+    Show --> ClickProduct[Klik Produk Flash Sale]
+    ClickProduct --> VerifyPrice{Verifikasi Harga di Server}
+    
+    VerifyPrice -->|Masih Promo| Discount[Gunakan Harga Diskon]
+    VerifyPrice -->|Waktu Habis| Normal[Kembalikan ke Harga Normal]
+```
+
+### Sistem Autentikasi & Hak Akses (Role-Based Access)
+```mermaid
+graph TD
+    Visitor([Pengunjung]) --> Login[Login / Register]
+    Login --> Verify{Verifikasi Kredensial}
+    
+    Verify -->|Gagal| Error[Pesan Error]
+    Verify -->|Berhasil| CheckRole{Cek Role User}
+    
+    CheckRole -->|Role: User| RedirectHome[Arahkan ke Halaman Utama]
+    CheckRole -->|Role: Admin| RedirectDash[Arahkan ke Control Room Dashboard]
+    
+    RedirectDash --> Middleware{Admin Middleware}
+    Middleware -->|Akses Ditolak| Abort[Error 403 / Redirect]
+    Middleware -->|Akses Diberikan| AdminArea[Akses Penuh Fitur Toko]
+```
+
+### Sinkronisasi Keranjang Belanja (Smart Cart)
+```mermaid
+graph LR
+    User([Pelanggan]) --> AddToCart[Klik 'Tambah ke Keranjang']
+    AddToCart --> AuthCheck{Cek Status Login}
+    
+    AuthCheck -->|Guest| LocalStorage[Simpan di LocalStorage (Browser)]
+    AuthCheck -->|Logged In| Database[Simpan ke Database Keranjang]
+    
+    LocalStorage --> Login[Saat Pelanggan Login]
+    Login --> Sync[Sinkronisasi Keranjang]
+    Sync --> Merge[Gabungkan LocalStorage dengan Database]
+```
+
+### Customer Service Routing (Live Takeover)
+```mermaid
+graph TD
+    Message([Pesan Pelanggan]) --> ChatController[Server Chat]
+    ChatController --> CheckStatus{Status Chatbot?}
+    
+    CheckStatus -->|AI Aktif| Gemini[Kirim ke Gemini AI]
+    CheckStatus -->|Rule Bot Aktif| Keyword[Proses Keyword Manual]
+    CheckStatus -->|Mode Manual| Wait[Tunggu Balasan Admin]
+    
+    Gemini --> SendBack[Kirim Balasan Otomatis ke User]
+    
+    Admin([Admin]) --> Monitor[Pantau Live Chat]
+    Monitor --> Takeover[Klik 'Ambil Alih Obrolan']
+    Takeover --> SetManual[Ubah Status Menjadi 'Mode Manual']
+    SetManual --> Reply[Kirim Pesan Langsung ke Pelanggan]
+```
+
+### Sistem Loyalitas: Ulasan & Wishlist
+```mermaid
+graph LR
+    Product([Halaman Produk]) --> Action{Aksi Pengguna}
+    
+    Action -->|Klik Hati| WishlistCheck{Sudah Login?}
+    WishlistCheck -->|Belum| ToLogin[Redirect Login]
+    WishlistCheck -->|Sudah| SaveWish[Simpan ke Wishlist Database]
+    
+    Action -->|Tulis Ulasan| OrderCheck{Pernah Beli?}
+    OrderCheck -->|Belum| RejectReview[Tolak Ulasan]
+    OrderCheck -->|Sudah & Selesai| SaveReview[Simpan Rating & Ulasan]
+    SaveReview --> Calc[Hitung Ulang Rata-Rata Rating Produk]
+```
+
 ### Struktur Database Utama
 | Tabel Model | Fungsi & Peran |
 | :--- | :--- |
