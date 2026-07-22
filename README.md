@@ -145,7 +145,7 @@ graph LR
     User([Pelanggan]) --> AddToCart[Klik 'Tambah ke Keranjang']
     AddToCart --> AuthCheck{Cek Status Login}
     
-    AuthCheck -->|Guest| LocalStorage[Simpan di LocalStorage (Browser)]
+    AuthCheck -->|Guest| LocalStorage["Simpan di LocalStorage (Browser)"]
     AuthCheck -->|Logged In| Database[Simpan ke Database Keranjang]
     
     LocalStorage --> Login[Saat Pelanggan Login]
