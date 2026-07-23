@@ -3,37 +3,17 @@
 @section('title', 'HIGH FIVE - Defined by the Streets')
 
 @section('content')
-<!-- Hero Section - Streetwear/Edgy -->
-<section class="relative min-h-screen bg-black flex flex-col justify-center overflow-hidden pt-20">
+<!-- Hero Section - Gothic/Streetwear -->
+<section class="relative min-h-screen bg-black flex flex-col justify-center items-center overflow-hidden pt-20">
     <div class="absolute inset-0">
-        <!-- Menggunakan gambar hero kustom dari brand -->
-        <img src="{{ asset('images/hero-bg.jpg') }}" alt="High Five Hero" class="w-full h-full object-cover opacity-50 grayscale mix-blend-luminosity">
+        <!-- Menggunakan gambar hero kustom dari brand (Gothic Pattern) -->
+        <img src="{{ asset('images/hero-bg.jpg') }}" alt="High Five Hero" class="w-full h-full object-cover pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
     </div>
-    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
     
-    <div class="relative z-10 px-4 sm:px-6 lg:px-12 w-full flex flex-col items-start justify-center h-full pb-20 mt-20">
-        <div class="overflow-hidden">
-            <h1 class="text-[18vw] leading-[0.8] font-black text-white uppercase tracking-tighter mix-blend-difference animate-fade-up select-none">
-                HIGH<br/>
-                <span class="text-transparent border-text-white italic font-serif">FIVE</span>
-            </h1>
-        </div>
-        
-        <style>
-            .border-text-white {
-                -webkit-text-stroke: 2px white;
-                color: transparent;
-            }
-        </style>
-
-        <div class="mt-12 md:mt-24 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <p class="text-white/80 max-w-sm text-sm md:text-base font-medium leading-relaxed tracking-wide animate-fade-up" style="animation-delay: 200ms;">
-                {{ $brandProfile->story ?? 'Rebelling against the ordinary. Premium streetwear designed for the modern youth culture.' }}
-            </p>
-            
-            <a href="{{ route('catalog') }}" class="group relative inline-flex items-center justify-center px-12 py-5 bg-white text-black text-xs font-bold tracking-[0.3em] uppercase overflow-hidden transition-transform duration-500 animate-fade-up" style="animation-delay: 300ms;">
-                <span class="relative z-10 transition-colors duration-300 group-hover:text-white">Shop The Drop</span>
-                <div class="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
+    <div class="relative z-10 px-4 sm:px-6 lg:px-12 w-full flex flex-col items-center justify-center h-full mt-auto pb-20 text-center">
+        <div class="mt-auto w-full flex flex-col items-center justify-center gap-8">
+            <a href="{{ route('catalog') }}" class="group relative inline-flex items-center justify-center px-10 py-4 border border-white text-white text-xs font-bold tracking-[0.3em] uppercase overflow-hidden transition-all duration-500 hover:bg-white hover:text-black animate-fade-up shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]" style="animation-delay: 300ms;">
+                <span class="relative z-10 transition-colors duration-300">Shop The Drop</span>
             </a>
         </div>
     </div>
@@ -249,7 +229,7 @@
         <div class="w-full lg:w-1/2 relative group">
             <!-- Brutalist offset shadow -->
             <div class="absolute inset-0 bg-gray-300 dark:bg-gray-700 translate-x-4 translate-y-4 md:translate-x-8 md:translate-y-8 transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2"></div>
-            <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=1200" alt="High Five Culture" class="relative z-10 w-full h-[400px] md:h-[600px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 border-4 border-black dark:border-white">
+            <img src="{{ asset('images/manifesto-v3.png') }}" alt="High Five Culture" class="relative z-10 w-full h-[400px] md:h-[600px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 border-4 border-black dark:border-white pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
         </div>
     </div>
 </section>

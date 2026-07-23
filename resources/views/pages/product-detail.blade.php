@@ -95,12 +95,12 @@
                          x-transition:leave-end="opacity-0 scale-95">
                          
                         <img :src="image" :alt="'{{ $product->name }}'" 
-                             class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75" />
+                             class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75 pointer-events-none select-none" draggable="false" oncontextmenu="return false;" />
                     </div>
                 </template>
                 <!-- Fallback -->
                 <div class="absolute inset-0 w-full h-full" x-show="images.length === 0">
-                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75" />
+                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" class="w-full h-full object-cover transition-all duration-500 group-hover:brightness-75 pointer-events-none select-none" draggable="false" oncontextmenu="return false;" />
                 </div>
                 
                 <!-- Slider Controls -->
@@ -157,7 +157,7 @@
                         <button @click="activeImage = index" 
                                 class="aspect-square border p-1 transition-all duration-300"
                                 :class="activeImage === index ? 'border-black shadow-sm' : 'border-primary-200 hover:border-black/50 opacity-70 hover:opacity-100'">
-                            <img :src="image" class="w-full h-full object-cover" />
+                            <img :src="image" class="w-full h-full object-cover pointer-events-none select-none" draggable="false" oncontextmenu="return false;" />
                         </button>
                     </template>
                 </div>
@@ -337,7 +337,7 @@
                         @if($review->image)
                             <div class="relative group cursor-pointer border-2 border-black dark:border-white overflow-hidden shadow-[4px_4px_0_0_#000] dark:shadow-[4px_4px_0_0_#fff]" @click="lightboxOpen = true; lightboxUrl = '{{ asset('storage/' . $review->image) }}'; lightboxType = 'image'">
                                 <img src="{{ asset('storage/' . $review->image) }}" alt="Foto Ulasan" 
-                                     class="w-20 h-20 sm:w-24 sm:h-24 object-cover group-hover:scale-110 grayscale group-hover:grayscale-0 transition-all duration-300">
+                                     class="w-20 h-20 sm:w-24 sm:h-24 object-cover group-hover:scale-110 grayscale group-hover:grayscale-0 transition-all duration-300 pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
                             </div>
                         @endif
                         @if($review->video)
@@ -422,7 +422,7 @@
          class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-onyx-900/90 backdrop-blur-md border-t border-primary-200 dark:border-onyx-700 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-40 py-3 px-4">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div class="hidden sm:flex items-center gap-4">
-                <img src="{{ $product->thumbnail }}" class="w-12 h-16 object-cover border border-primary-200 dark:border-onyx-700">
+                <img src="{{ $product->thumbnail }}" class="w-12 h-16 object-cover border border-primary-200 dark:border-onyx-700 pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
                 <div>
                     <h4 class="text-sm font-bold uppercase tracking-tight line-clamp-1 text-primary-900 dark:text-white">{{ $product->name }}</h4>
                     <p class="text-xs text-primary-500 font-bold mt-0.5">

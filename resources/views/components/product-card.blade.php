@@ -16,10 +16,10 @@
             <a href="{{ route('product.show', $product->id) }}" class="block w-full h-full z-10 relative">
                 @if($product->thumbnail)
                     <template x-for="(image, index) in images" :key="index">
-                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-all duration-700 absolute inset-0" :class="[loaded ? 'opacity-100' : 'opacity-0', images.length === 1 ? 'group-hover:scale-105 group-hover:brightness-90' : '']" x-transition.opacity.duration.500ms />
+                        <img :src="image" :alt="'{{ $product->name }}'" x-show="activeImage === index" class="w-full h-full object-cover transition-all duration-700 absolute inset-0 pointer-events-none select-none" :class="[loaded ? 'opacity-100' : 'opacity-0', images.length === 1 ? 'group-hover:scale-105 group-hover:brightness-90' : '']" x-transition.opacity.duration.500ms draggable="false" oncontextmenu="return false;" />
                     </template>
                     <!-- Preload / Event listener for the first image -->
-                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" x-show="false" @load="loaded = true" x-init="if($el.complete) loaded = true" class="w-full h-full object-cover absolute inset-0" />
+                    <img src="{{ $product->thumbnail }}" alt="{{ $product->name }}" x-show="false" @load="loaded = true" x-init="if($el.complete) loaded = true" class="w-full h-full object-cover absolute inset-0 pointer-events-none select-none" draggable="false" oncontextmenu="return false;" />
                 @else
                     <div class="w-full h-full flex items-center justify-center bg-primary-100 dark:bg-onyx-800 absolute inset-0">
                         <span class="text-xs uppercase tracking-widest text-primary-400 dark:text-gray-500">No Image</span>

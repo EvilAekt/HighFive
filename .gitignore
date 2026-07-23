@@ -4,6 +4,7 @@
 .env.*
 !.env.example
 /public/storage
+/public/build
 /storage/*.key
 /bootstrap/cache/
 .phpunit.result.cache
