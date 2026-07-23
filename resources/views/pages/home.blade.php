@@ -229,7 +229,7 @@
         <div class="w-full lg:w-1/2 relative group">
             <!-- Brutalist offset shadow -->
             <div class="absolute inset-0 bg-gray-300 dark:bg-gray-700 translate-x-4 translate-y-4 md:translate-x-8 md:translate-y-8 transition-transform duration-500 group-hover:translate-x-2 group-hover:translate-y-2"></div>
-            <img src="{{ asset('images/manifesto-v3.png') }}" alt="High Five Culture" class="relative z-10 w-full h-[400px] md:h-[600px] object-cover grayscale group-hover:grayscale-0 transition-all duration-700 border-4 border-black dark:border-white pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
+            <img src="{{ asset('images/manifesto-real.jpg') }}" alt="High Five Culture" class="relative z-10 w-full h-[400px] md:h-[600px] object-cover object-[center_65%] grayscale group-hover:grayscale-0 transition-all duration-700 border-4 border-black dark:border-white pointer-events-none select-none" draggable="false" oncontextmenu="return false;">
         </div>
     </div>
 </section>
